@@ -3,10 +3,10 @@
  * Logic untuk login dan logout admin
  */
 
-// Kredensial admin (untuk prototype)
+// Kredensial admin
 const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
+  username: 'kkm51',
+  password: 'perunggu3',
 };
 
 /**
