@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS public.kkn_attendance (
 ALTER TABLE public.kkn_members DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.kkn_attendance DISABLE ROW LEVEL SECURITY;
 
+-- 3b. Grant akses penuh ke role anon (digunakan oleh Supabase API Key publik)
+GRANT ALL ON public.kkn_members TO anon;
+GRANT ALL ON public.kkn_attendance TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+
 -- 4. Masukkan Data Awal 19 Anggota KKN
 INSERT INTO public.kkn_members (id, nama) VALUES
 (1, 'Adrian Dhaniella'),
