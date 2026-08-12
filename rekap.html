@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rekap Kehadiran — Absensi KKN</title>
+  <meta name="description" content="Rekap kehadiran anggota KKN berdasarkan rentang tanggal." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon"><i class="fas fa-clipboard-check"></i></div>
+        <div class="sidebar-brand-text">
+          Absensi KKN
+          <small>Panel Admin</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-label">Menu Utama</div>
+        <a href="dashboard-admin.html" class="sidebar-nav-item">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="anggota.html" class="sidebar-nav-item">
+          <i class="fas fa-users"></i> Data Anggota
+        </a>
+        <a href="absensi.html" class="sidebar-nav-item">
+          <i class="fas fa-list-check"></i> Data Absensi
+        </a>
+        <a href="rekap.html" class="sidebar-nav-item active">
+          <i class="fas fa-chart-bar"></i> Rekap
+        </a>
+        <div class="sidebar-nav-label" style="margin-top: 8px;">Lainnya</div>
+        <a href="index.html" class="sidebar-nav-item">
+          <i class="fas fa-arrow-left"></i> Halaman Absensi
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-nav-item" id="logoutBtnSidebar" style="width:100%; background:none; color:var(--color-sidebar-text); border:none; text-align:left; border-radius:6px;">
+          <i class="fas fa-sign-out-alt" style="color:#e74c3c;"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- NAVBAR -->
+      <header class="navbar">
+        <button class="navbar-toggle" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="navbar-title">
+          Rekap Kehadiran
+          <small>Statistik kehadiran per anggota</small>
+        </div>
+        <div class="navbar-right">
+          <div class="navbar-user">
+            <div class="navbar-avatar"><i class="fas fa-user"></i></div>
+            <span id="adminUsername">admin</span>
+          </div>
+          <button class="btn-logout" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <main class="page-content">
+
+        <div class="page-header">
+          <h1 class="page-title">Rekap Kehadiran</h1>
+          <p class="page-subtitle">Lihat persentase kehadiran setiap anggota dalam rentang waktu tertentu</p>
+        </div>
+
+        <!-- Filter Tanggal -->
+        <div class="rekap-filter-card">
+          <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:var(--space-4); color:var(--color-text);">
+            <i class="fas fa-calendar-alt" style="color:var(--color-primary); margin-right:8px;"></i>
+            Pilih Periode Rekap
+          </h3>
+          <div class="rekap-filter-grid">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="rekapStart">Tanggal Mulai</label>
+              <input type="date" id="rekapStart" class="form-input" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="rekapEnd">Tanggal Akhir</label>
+              <input type="date" id="rekapEnd" class="form-input" />
+            </div>
+            <div>
+              <button class="btn btn-primary" id="hitungRekapBtn" style="padding: 10px 24px;">
+                <i class="fas fa-calculator"></i> Hitung
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat Cards Rekap -->
+        <div class="rekap-stats-grid">
+          <div class="rekap-stat-card">
+            <div class="rekap-stat-label">Total Anggota</div>
+            <div class="rekap-stat-value" id="rekapTotalAnggota">—</div>
+          </div>
+          <div class="rekap-stat-card">
+            <div class="rekap-stat-label">Total Kehadiran</div>
+            <div class="rekap-stat-value" id="rekapTotalKehadiran">—</div>
+          </div>
+          <div class="rekap-stat-card">
+            <div class="rekap-stat-label">Total Hari</div>
+            <div class="rekap-stat-value" id="rekapTotalHari">—</div>
+          </div>
+          <div class="rekap-stat-card">
+            <div class="rekap-stat-label">Rata-rata Kehadiran</div>
+            <div class="rekap-stat-value" id="rekapPersentase">—</div>
+          </div>
+        </div>
+
+        <!-- Tabel Rekap -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-table"></i>
+              Rekap Per Anggota
+              <span style="margin-left:8px; font-size:0.8rem; font-weight:600; background:var(--color-primary-bg); color:var(--color-primary); padding:2px 10px; border-radius:99px;" id="rekapPeriode">—</span>
+            </div>
+            <button class="btn-export" id="exportCsvRekap">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:50px;">No</th>
+                  <th>Nama</th>
+                  <th style="width:130px;">Jumlah Hadir</th>
+                  <th>Persentase Kehadiran</th>
+                </tr>
+              </thead>
+              <tbody id="rekapTableBody">
+                <tr>
+                  <td colspan="4" class="empty-state">
+                    <i class="fas fa-chart-bar"></i>
+                    <p>Pilih periode dan klik Hitung untuk melihat rekap.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rekap.js"></script>
+
+</body>
+</html>

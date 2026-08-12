@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Absensi KKN</title>
+  <meta name="description" content="Aplikasi absensi digital untuk kegiatan Kuliah Kerja Nyata (KKN). Mudah, cepat, dan terorganisir." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ABSENSI PAGE -->
+  <div class="absensi-page">
+
+    <!-- Card Absensi -->
+    <div class="absensi-card">
+
+      <!-- Header -->
+      <div class="absensi-header">
+        <div class="absensi-logo">
+          <img src="assets/images/logo.png" alt="Logo KKN" />
+        </div>
+        <h1 class="absensi-title">ABSENSI <span>KKN</span></h1>
+        <p class="absensi-subtitle">Silakan lakukan absensi kehadiran Anda</p>
+      </div>
+
+      <!-- Clock -->
+      <div class="clock-section">
+        <div class="clock-display" id="clock">--:--:--</div>
+        <div class="date-display" id="currentDate">Memuat tanggal...</div>
+      </div>
+
+      <!-- Search Nama -->
+      <div class="form-group">
+        <label class="form-label" for="searchMember">
+          <i class="fas fa-user" style="color:var(--color-primary); margin-right:6px;"></i>
+          Pilih Nama Anda
+        </label>
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            id="searchMember"
+            class="search-input"
+            placeholder="Ketik atau pilih nama Anda..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <div class="dropdown-list" id="dropdownList"></div>
+        </div>
+      </div>
+
+      <!-- Selected Card -->
+      <div class="selected-card" id="selectedCard" style="display:none;">
+        <div class="member-avatar" id="memberAvatar">?</div>
+        <div class="member-info">
+          <div class="label">Nama Terpilih</div>
+          <div class="name" id="selectedName">—</div>
+        </div>
+      </div>
+
+      <!-- Already Card (sudah absen) -->
+      <div class="already-card" id="alreadyCard" style="display:none;">
+        <div class="already-card-title">
+          <i class="fas fa-check-double"></i>
+          ANDA SUDAH ABSEN HARI INI
+        </div>
+        <div class="result-detail">
+          <div class="result-row">
+            <span class="label">Nama</span>
+            <span class="value" id="alreadyName">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Tanggal</span>
+            <span class="value" id="alreadyTanggal">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Jam</span>
+            <span class="value" id="alreadyJam">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Status</span>
+            <span class="badge badge-hadir">Hadir</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Card -->
+      <div class="success-result-card" id="successCard" style="display:none;">
+        <div class="success-icon-big">
+          <i class="fas fa-check"></i>
+        </div>
+        <div class="success-title">✓ ABSENSI BERHASIL</div>
+        <div class="result-detail">
+          <div class="result-row">
+            <span class="label">Nama</span>
+            <span class="value" id="successName">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Tanggal</span>
+            <span class="value" id="successTanggal">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Jam</span>
+            <span class="value" id="successJam">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Status</span>
+            <span class="badge-hadir-result">Hadir</span>
+          </div>
+        </div>
+        <p style="font-size:0.85rem; color:var(--color-success); font-weight:600; margin-bottom:var(--space-4);">
+          Selamat menjalankan kegiatan KKN! 🎉
+        </p>
+        <button class="btn-kembali" id="kembaliBtn">
+          <i class="fas fa-arrow-left"></i> KEMBALI
+        </button>
+      </div>
+
+      <!-- Tombol Hadir -->
+      <div id="hadirBtnWrap">
+        <button class="btn-hadir" id="hadirBtn">
+          <i class="fas fa-check"></i> HADIR
+        </button>
+      </div>
+
+    </div><!-- /.absensi-card -->
+
+    <!-- Link Admin (kecil, tidak mencolok) -->
+    <div class="admin-link-wrap">
+      <a href="admin-login.html" class="admin-link">
+        <i class="fas fa-lock"></i> Admin
+      </a>
+    </div>
+
+  </div><!-- /.absensi-page -->
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/absensi.js"></script>
+
+  <script>
+    // Tambahkan logika avatar huruf pertama
+    document.addEventListener('DOMContentLoaded', function () {
+      const selectedCard = document.getElementById('selectedCard');
+      const selectedName = document.getElementById('selectedName');
+      const memberAvatar = document.getElementById('memberAvatar');
+      const hadirBtnWrap = document.getElementById('hadirBtnWrap');
+      const successCard = document.getElementById('successCard');
+
+      // Observer untuk update avatar ketika nama berubah
+      const nameObserver = new MutationObserver(function () {
+        const name = selectedName.textContent;
+        if (name && name !== '—') {
+          memberAvatar.textContent = name.charAt(0).toUpperCase();
+        }
+      });
+      nameObserver.observe(selectedName, { childList: true, subtree: true, characterData: true });
+
+      // Sembunyikan tombol hadir ketika sukses
+      const successObserver = new MutationObserver(function () {
+        if (successCard.style.display === 'block') {
+          hadirBtnWrap.style.display = 'none';
+        } else {
+          hadirBtnWrap.style.display = 'block';
+        }
+      });
+      successObserver.observe(successCard, { attributes: true, attributeFilter: ['style'] });
+    });
+  </script>
+
+</body>
+</html>
