@@ -166,15 +166,16 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ============================================================
-  // INISIALISASI & REALTIME STORAGE SYNC
+  // INISIALISASI & REALTIME STORAGE / POLLING SYNC
   // ============================================================
-  updateStats();
   loadTable();
 
-  // Listener jika ada perubahan data di tab lain
+  // Polling tiap 5 detik agar dashboard admin selalu ter-update otomatis secara live
+  setInterval(loadTable, 5000);
+
+  // Listener jika ada perubahan data di tab lain (localStorage event)
   window.addEventListener('storage', function (e) {
     if (e.key === KEYS.ATTENDANCE || e.key === KEYS.MEMBERS || !e.key) {
-      updateStats();
       loadTable();
     }
   });
