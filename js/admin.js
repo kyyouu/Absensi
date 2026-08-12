@@ -52,11 +52,14 @@ document.addEventListener('DOMContentLoaded', function () {
   if (logoutBtnSidebar) logoutBtnSidebar.addEventListener('click', handleLogout);
 
   // ============================================================
-  // STATISTIK
+  // STATISTIK & TABEL
   // ============================================================
-  function updateStats() {
-    const members = getMembers();
-    const todayAttendance = getTodayAttendance();
+  async function updateStatsAndTable() {
+    const members = await getMembersAsync();
+    const attendance = await getAttendanceAsync();
+    const today = getTodayDateString();
+
+    const todayAttendance = attendance.filter(a => a.tanggal === today);
 
     const totalAnggota = members.length;
     const hadirHariIni = todayAttendance.length;
@@ -69,27 +72,25 @@ document.addEventListener('DOMContentLoaded', function () {
     if (elTotal) elTotal.textContent = totalAnggota;
     if (elHadir) elHadir.textContent = hadirHariIni;
     if (elBelum) elBelum.textContent = Math.max(0, belumHadir);
+
+    // Filter untuk tabel hari ini / tanggal terpilih
+    const targetDate = filterDate || today;
+    const filteredAttendance = attendance.filter(a => a.tanggal === targetDate);
+
+    currentData = filteredAttendance.filter(function (a) {
+      return a.nama.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    currentData.sort((a, b) => b.jam.localeCompare(a.jam));
+    renderTable(currentData);
   }
 
-  // ============================================================
-  // TABEL ABSENSI HARI INI
-  // ============================================================
   let currentData = [];
   let filterDate = getTodayDateString();
   let searchQuery = '';
 
   function loadTable() {
-    const allAttendance = getAttendanceByDate(filterDate);
-
-    // Apply search filter
-    currentData = allAttendance.filter(function (a) {
-      return a.nama.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-
-    // Sort: terbaru dulu
-    currentData.sort((a, b) => b.jam.localeCompare(a.jam));
-
-    renderTable(currentData);
+    updateStatsAndTable();
   }
 
   function renderTable(data) {

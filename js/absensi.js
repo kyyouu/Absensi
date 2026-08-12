@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============================================================
   // SEARCHABLE DROPDOWN NAMA
   // ============================================================
-  const members = getMembers();
+  let membersList = getMembers();
   const searchInput = document.getElementById('searchMember');
   const dropdownList = document.getElementById('dropdownList');
   const selectedNameEl = document.getElementById('selectedName');
@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const successCard = document.getElementById('successCard');
 
   let selectedMember = null;
+
+  // Load members from Supabase / localStorage
+  async function loadMemberList() {
+    membersList = await getMembersAsync();
+  }
+  loadMemberList();
 
   // Render dropdown items
   function renderDropdown(list) {
@@ -66,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Pilih anggota
-  function selectMember(member) {
+  async function selectMember(member) {
     selectedMember = member;
     searchInput.value = member.nama;
     dropdownList.style.display = 'none';
@@ -77,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Cek apakah sudah absen hari ini
     const today = getTodayDateString();
-    const existing = isAlreadyAttended(member.id, today);
+    const existing = await isAlreadyAttendedAsync(member.id, today);
 
     alreadyCard.style.display = 'none';
     successCard.style.display = 'none';
@@ -103,23 +109,23 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Event: search input
-  searchInput.addEventListener('focus', function () {
-    const currentMembers = getMembers();
+  searchInput.addEventListener('focus', async function () {
+    const currentMembers = await getMembersAsync();
+    membersList = currentMembers;
     renderDropdown(currentMembers);
     dropdownList.style.display = 'block';
   });
 
   searchInput.addEventListener('input', function () {
     const q = this.value.trim();
-    const currentMembers = getMembers();
-    const filtered = currentMembers.filter(m =>
+    const filtered = membersList.filter(m =>
       m.nama.toLowerCase().includes(q.toLowerCase())
     );
     renderDropdown(filtered);
     dropdownList.style.display = 'block';
 
     // Cek jika ketikan persis sama dengan salah satu anggota
-    const exactMatch = currentMembers.find(m => m.nama.toLowerCase() === q.toLowerCase());
+    const exactMatch = membersList.find(m => m.nama.toLowerCase() === q.toLowerCase());
     if (exactMatch) {
       selectMember(exactMatch);
     } else if (!q) {
@@ -143,19 +149,20 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============================================================
   // TOMBOL HADIR
   // ============================================================
-  hadirBtn.addEventListener('click', function () {
-    const currentMembers = getMembers();
+  hadirBtn.addEventListener('click', async function () {
+    if (hadirBtn.disabled) return;
+
+    const currentMembers = membersList.length > 0 ? membersList : await getMembersAsync();
 
     // Jika belum ada selectedMember, coba cocokkan dari teks pencarian
     if (!selectedMember) {
       const q = searchInput.value.trim();
       if (q) {
-        // Cek exact match atau 1 match saja
         const match = currentMembers.find(m => m.nama.toLowerCase() === q.toLowerCase()) ||
                       (currentMembers.filter(m => m.nama.toLowerCase().includes(q.toLowerCase())).length === 1 ?
                        currentMembers.find(m => m.nama.toLowerCase().includes(q.toLowerCase())) : null);
         if (match) {
-          selectMember(match);
+          await selectMember(match);
         }
       }
     }
@@ -165,30 +172,26 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    if (hadirBtn.disabled) return;
-
     // Loading state
     hadirBtn.disabled = true;
     hadirBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
-    setTimeout(function () {
-      const record = addAttendance(selectedMember.id, selectedMember.nama);
+    const record = await addAttendanceAsync(selectedMember.id, selectedMember.nama);
 
-      if (record) {
-        showSuccessCard(selectedMember, record);
-        showToast('Absensi berhasil dicatat!', 'success');
-      } else {
-        // Sudah absen
-        showToast('Anda sudah melakukan absensi hari ini.', 'warning');
-        const today = getTodayDateString();
-        const existing = isAlreadyAttended(selectedMember.id, today);
-        if (existing) {
-          showAlreadyCard(selectedMember, existing);
-        }
-        hadirBtn.classList.add('btn-disabled');
-        hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
+    if (record) {
+      showSuccessCard(selectedMember, record);
+      showToast('Absensi berhasil dicatat!', 'success');
+    } else {
+      // Sudah absen
+      showToast('Anda sudah melakukan absensi hari ini.', 'warning');
+      const today = getTodayDateString();
+      const existing = await isAlreadyAttendedAsync(selectedMember.id, today);
+      if (existing) {
+        showAlreadyCard(selectedMember, existing);
       }
-    }, 300);
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
+    }
   });
 
   // Tampilkan card sukses

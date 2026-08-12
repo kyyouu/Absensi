@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============================================================
   // RENDER TABEL
   // ============================================================
-  function renderTable() {
-    const members = getMembers();
+  async function renderTable() {
+    const members = await getMembersAsync();
     const filtered = members.filter(m =>
       m.nama.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const addError = document.getElementById('addMemberError');
 
   if (addForm) {
-    addForm.addEventListener('submit', function (e) {
+    addForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       const nama = addNameInput.value.trim();
 
@@ -90,17 +90,17 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       // Cek duplikat
-      const members = getMembers();
+      const members = await getMembersAsync();
       const duplicate = members.find(m => m.nama.toLowerCase() === nama.toLowerCase());
       if (duplicate) {
         showFieldError(addError, 'Anggota dengan nama ini sudah ada.');
         return;
       }
 
-      addMember(nama);
+      await addMemberAsync(nama);
       addNameInput.value = '';
       hideFieldError(addError);
-      renderTable();
+      await renderTable();
       showToast(`Anggota "${nama}" berhasil ditambahkan.`, 'success');
     });
 
@@ -128,9 +128,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const editError = document.getElementById('editMemberError');
   const editForm = document.getElementById('editMemberForm');
 
-  window.openEditModal = function (id) {
-    const members = getMembers();
-    const member = members.find(m => m.id === id);
+  window.openEditModal = async function (id) {
+    const members = await getMembersAsync();
+    const member = members.find(m => parseInt(m.id) === parseInt(id));
     if (!member) return;
 
     editingId = id;
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   if (editForm) {
-    editForm.addEventListener('submit', function (e) {
+    editForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       const namaBaru = editNameInput.value.trim();
 
@@ -149,18 +149,18 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      const members = getMembers();
+      const members = await getMembersAsync();
       const duplicate = members.find(m =>
-        m.nama.toLowerCase() === namaBaru.toLowerCase() && m.id !== editingId
+        m.nama.toLowerCase() === namaBaru.toLowerCase() && parseInt(m.id) !== parseInt(editingId)
       );
       if (duplicate) {
         showFieldError(editError, 'Nama ini sudah digunakan.');
         return;
       }
 
-      updateMember(editingId, namaBaru);
+      await updateMemberAsync(editingId, namaBaru);
       closeModal(editModal);
-      renderTable();
+      await renderTable();
       showToast('Nama anggota berhasil diperbarui.', 'success');
     });
   }
@@ -181,13 +181,13 @@ document.addEventListener('DOMContentLoaded', function () {
     openModal(deleteModal);
   };
 
-  document.getElementById('confirmDeleteBtn')?.addEventListener('click', function () {
+  document.getElementById('confirmDeleteBtn')?.addEventListener('click', async function () {
     if (deletingId === null) return;
-    const members = getMembers();
-    const member = members.find(m => m.id === deletingId);
-    deleteMember(deletingId);
+    const members = await getMembersAsync();
+    const member = members.find(m => parseInt(m.id) === parseInt(deletingId));
+    await deleteMemberAsync(deletingId);
     closeModal(deleteModal);
-    renderTable();
+    await renderTable();
     showToast(`Anggota "${member?.nama || ''}" berhasil dihapus.`, 'success');
     deletingId = null;
   });

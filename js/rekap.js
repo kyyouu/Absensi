@@ -63,8 +63,8 @@ function initAbsensiPage() {
   let searchQuery = '';
   let filterDate = '';
 
-  function loadHistory() {
-    let data = getAttendance();
+  async function loadHistory() {
+    let data = await getAttendanceAsync();
 
     // Filter tanggal
     if (filterDate) {
@@ -189,7 +189,7 @@ function initRekapPage() {
   if (startInput) startInput.value = firstDay;
   if (endInput) endInput.value = today;
 
-  function calcRekap() {
+  async function calcRekap() {
     const start = startInput ? startInput.value : firstDay;
     const end = endInput ? endInput.value : today;
 
@@ -198,8 +198,9 @@ function initRekapPage() {
       return;
     }
 
-    const members = getMembers();
-    const attendanceInRange = getAttendanceByRange(start, end);
+    const members = await getMembersAsync();
+    const allAttendance = await getAttendanceAsync();
+    const attendanceInRange = allAttendance.filter(a => a.tanggal >= start && a.tanggal <= end);
 
     // Hitung hari unik dalam rentang yang ada absensinya
     const uniqueDays = new Set(attendanceInRange.map(a => a.tanggal));
