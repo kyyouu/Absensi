@@ -231,21 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const resetDeviceBtn = document.getElementById('resetLocalDeviceBtn');
-  if (resetDeviceBtn) {
-    resetDeviceBtn.addEventListener('click', async function () {
-      await clearAllAttendanceAsync();
-      selectedMember = null;
-      searchInput.value = '';
-      selectedCard.style.display = 'none';
-      alreadyCard.style.display = 'none';
-      successCard.style.display = 'none';
-      hadirBtn.disabled = false;
-      hadirBtn.classList.remove('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
-      showToast('Status absensi berhasil di-reset!', 'success');
-    });
-  }
+  // Tombol reset HP dihapus — user tidak bisa bypass 1 absen per hari
 
   // ============================================================
   // TOAST NOTIFICATION

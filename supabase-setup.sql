@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS public.kkn_attendance (
     tanggal DATE NOT NULL,
     jam TIME NOT NULL,
     status TEXT NOT NULL DEFAULT 'Hadir',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_absen_per_hari UNIQUE (anggota_id, tanggal)
 );
 
 -- 3. Matikan RLS (Row Level Security) agar dapat diakses publik dari Web Vanilla JS
