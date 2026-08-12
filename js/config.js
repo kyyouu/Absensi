@@ -6,11 +6,9 @@
  * Supabase Dashboard -> Project Settings -> API
  */
 const SUPABASE_CONFIG = {
-  // Ganti dengan Project URL Supabase Anda
-  // Contoh: 'https://xyzabcdefghijklm.supabase.co'
-  URL: '',
+  // Project URL Supabase
+  URL: 'https://ehbidyovspcdvhavwwvu.supabase.co',
 
-  // Ganti dengan anon public key Supabase Anda
-  // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+  // anon public key Supabase (masukkan anon key Anda di sini)
   ANON_KEY: ''
 };
