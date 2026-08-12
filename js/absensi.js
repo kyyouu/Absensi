@@ -104,24 +104,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Event: search input
   searchInput.addEventListener('focus', function () {
-    renderDropdown(members);
+    const currentMembers = getMembers();
+    renderDropdown(currentMembers);
     dropdownList.style.display = 'block';
   });
 
   searchInput.addEventListener('input', function () {
     const q = this.value.trim();
-    const filtered = members.filter(m =>
+    const currentMembers = getMembers();
+    const filtered = currentMembers.filter(m =>
       m.nama.toLowerCase().includes(q.toLowerCase())
     );
     renderDropdown(filtered);
     dropdownList.style.display = 'block';
 
-    // Reset jika user menghapus teks
-    if (!q) {
+    // Cek jika ketikan persis sama dengan salah satu anggota
+    const exactMatch = currentMembers.find(m => m.nama.toLowerCase() === q.toLowerCase());
+    if (exactMatch) {
+      selectMember(exactMatch);
+    } else if (!q) {
       selectedMember = null;
       selectedCard.style.display = 'none';
       alreadyCard.style.display = 'none';
       successCard.style.display = 'none';
+      hadirBtn.disabled = false;
+      hadirBtn.classList.remove('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
     }
   });
 
@@ -136,8 +144,24 @@ document.addEventListener('DOMContentLoaded', function () {
   // TOMBOL HADIR
   // ============================================================
   hadirBtn.addEventListener('click', function () {
+    const currentMembers = getMembers();
+
+    // Jika belum ada selectedMember, coba cocokkan dari teks pencarian
     if (!selectedMember) {
-      showToast('Silakan pilih nama terlebih dahulu.', 'error');
+      const q = searchInput.value.trim();
+      if (q) {
+        // Cek exact match atau 1 match saja
+        const match = currentMembers.find(m => m.nama.toLowerCase() === q.toLowerCase()) ||
+                      (currentMembers.filter(m => m.nama.toLowerCase().includes(q.toLowerCase())).length === 1 ?
+                       currentMembers.find(m => m.nama.toLowerCase().includes(q.toLowerCase())) : null);
+        if (match) {
+          selectMember(match);
+        }
+      }
+    }
+
+    if (!selectedMember) {
+      showToast('Silakan pilih nama Anda dari daftar terlebih dahulu.', 'error');
       return;
     }
 
@@ -154,15 +178,17 @@ document.addEventListener('DOMContentLoaded', function () {
         showSuccessCard(selectedMember, record);
         showToast('Absensi berhasil dicatat!', 'success');
       } else {
-        // Sudah absen (race condition guard)
+        // Sudah absen
         showToast('Anda sudah melakukan absensi hari ini.', 'warning');
         const today = getTodayDateString();
         const existing = isAlreadyAttended(selectedMember.id, today);
-        showAlreadyCard(selectedMember, existing);
+        if (existing) {
+          showAlreadyCard(selectedMember, existing);
+        }
         hadirBtn.classList.add('btn-disabled');
         hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
       }
-    }, 400);
+    }, 300);
   });
 
   // Tampilkan card sukses

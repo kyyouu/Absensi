@@ -43,11 +43,17 @@ const DEFAULT_MEMBERS = [
  * Inisialisasi data awal saat aplikasi pertama dijalankan
  */
 function initializeData() {
-  if (!localStorage.getItem(KEYS.MEMBERS)) {
-    localStorage.setItem(KEYS.MEMBERS, JSON.stringify(DEFAULT_MEMBERS));
-  }
-  if (!localStorage.getItem(KEYS.ATTENDANCE)) {
-    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify([]));
+  try {
+    const existingMembers = localStorage.getItem(KEYS.MEMBERS);
+    if (!existingMembers || JSON.parse(existingMembers).length === 0) {
+      localStorage.setItem(KEYS.MEMBERS, JSON.stringify(DEFAULT_MEMBERS));
+    }
+    const existingAttendance = localStorage.getItem(KEYS.ATTENDANCE);
+    if (!existingAttendance) {
+      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify([]));
+    }
+  } catch (e) {
+    console.error('Error initializing data in localStorage:', e);
   }
 }
 
@@ -60,8 +66,13 @@ function initializeData() {
  * @returns {Array} Array of member objects
  */
 function getMembers() {
-  const data = localStorage.getItem(KEYS.MEMBERS);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(KEYS.MEMBERS);
+    return data ? JSON.parse(data) : DEFAULT_MEMBERS;
+  } catch (e) {
+    console.error('Error reading members from localStorage:', e);
+    return DEFAULT_MEMBERS;
+  }
 }
 
 /**
@@ -69,7 +80,11 @@ function getMembers() {
  * @param {Array} members
  */
 function saveMembers(members) {
-  localStorage.setItem(KEYS.MEMBERS, JSON.stringify(members));
+  try {
+    localStorage.setItem(KEYS.MEMBERS, JSON.stringify(members));
+  } catch (e) {
+    console.error('Error saving members:', e);
+  }
 }
 
 /**
@@ -79,7 +94,7 @@ function saveMembers(members) {
  */
 function addMember(nama) {
   const members = getMembers();
-  const maxId = members.length > 0 ? Math.max(...members.map(m => m.id)) : 0;
+  const maxId = members.reduce((max, m) => Math.max(max, parseInt(m.id) || 0), 0);
   const newMember = { id: maxId + 1, nama: nama.trim() };
   members.push(newMember);
   saveMembers(members);
@@ -94,7 +109,7 @@ function addMember(nama) {
  */
 function updateMember(id, namaBaru) {
   const members = getMembers();
-  const index = members.findIndex(m => m.id === id);
+  const index = members.findIndex(m => parseInt(m.id) === parseInt(id));
   if (index === -1) return false;
   members[index].nama = namaBaru.trim();
   saveMembers(members);
@@ -108,7 +123,7 @@ function updateMember(id, namaBaru) {
  */
 function deleteMember(id) {
   const members = getMembers();
-  const filtered = members.filter(m => m.id !== id);
+  const filtered = members.filter(m => parseInt(m.id) !== parseInt(id));
   if (filtered.length === members.length) return false;
   saveMembers(filtered);
   return true;
@@ -136,8 +151,13 @@ function searchMembers(query) {
  * @returns {Array}
  */
 function getAttendance() {
-  const data = localStorage.getItem(KEYS.ATTENDANCE);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(KEYS.ATTENDANCE);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error('Error reading attendance from localStorage:', e);
+    return [];
+  }
 }
 
 /**
@@ -145,7 +165,11 @@ function getAttendance() {
  * @param {Array} attendance
  */
 function saveAttendance(attendance) {
-  localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendance));
+  try {
+    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendance));
+  } catch (e) {
+    console.error('Error saving attendance to localStorage:', e);
+  }
 }
 
 /**
@@ -156,18 +180,21 @@ function saveAttendance(attendance) {
  */
 function addAttendance(anggotaId, nama) {
   const today = getTodayDateString();
-  if (isAlreadyAttended(anggotaId, today)) return null;
+  if (isAlreadyAttended(anggotaId, today)) {
+    console.warn(`Anggota ID ${anggotaId} (${nama}) sudah absen pada ${today}`);
+    return null;
+  }
 
   const attendance = getAttendance();
-  const maxId = attendance.length > 0 ? Math.max(...attendance.map(a => a.id)) : 0;
+  const maxId = attendance.reduce((max, a) => Math.max(max, parseInt(a.id) || 0), 0);
 
   const now = new Date();
   const jam = now.toTimeString().split(' ')[0]; // HH:MM:SS
 
   const record = {
     id: maxId + 1,
-    anggotaId: anggotaId,
-    nama: nama,
+    anggotaId: parseInt(anggotaId),
+    nama: nama.trim(),
     tanggal: today,
     jam: jam,
     status: 'Hadir',
@@ -175,6 +202,7 @@ function addAttendance(anggotaId, nama) {
 
   attendance.push(record);
   saveAttendance(attendance);
+  console.log('✅ Absensi berhasil disimpan ke localStorage:', record);
   return record;
 }
 
@@ -214,7 +242,8 @@ function getAttendanceByRange(startDate, endDate) {
  */
 function isAlreadyAttended(anggotaId, tanggal) {
   const attendance = getAttendance();
-  return attendance.find(a => a.anggotaId === anggotaId && a.tanggal === tanggal) || null;
+  const targetId = parseInt(anggotaId);
+  return attendance.find(a => parseInt(a.anggotaId) === targetId && a.tanggal === tanggal) || null;
 }
 
 /**

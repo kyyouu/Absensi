@@ -153,10 +153,18 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ============================================================
-  // INISIALISASI
+  // INISIALISASI & REALTIME STORAGE SYNC
   // ============================================================
   updateStats();
   loadTable();
+
+  // Listener jika ada perubahan data di tab lain
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEYS.ATTENDANCE || e.key === KEYS.MEMBERS || !e.key) {
+      updateStats();
+      loadTable();
+    }
+  });
 
   // Update tanggal di header
   const headerDateEl = document.getElementById('headerDate');
