@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ============================================================
-  // TOMBOL KEMBALI
+  // TOMBOL KEMBALI & RESET HP
   // ============================================================
   const kembaliBtn = document.getElementById('kembaliBtn');
   if (kembaliBtn) {
@@ -228,6 +228,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Scroll ke atas
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  const resetDeviceBtn = document.getElementById('resetLocalDeviceBtn');
+  if (resetDeviceBtn) {
+    resetDeviceBtn.addEventListener('click', async function () {
+      await clearAllAttendanceAsync();
+      selectedMember = null;
+      searchInput.value = '';
+      selectedCard.style.display = 'none';
+      alreadyCard.style.display = 'none';
+      successCard.style.display = 'none';
+      hadirBtn.disabled = false;
+      hadirBtn.classList.remove('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+      showToast('Status absensi berhasil di-reset!', 'success');
     });
   }
 

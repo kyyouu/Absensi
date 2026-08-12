@@ -298,15 +298,20 @@ async function isAlreadyAttendedAsync(anggotaId, tanggal) {
         .select('*')
         .eq('anggota_id', targetId)
         .eq('tanggal', tanggal);
-      if (!error && data && data.length > 0) {
-        return {
-          id: data[0].id,
-          anggotaId: data[0].anggota_id,
-          nama: data[0].nama,
-          tanggal: data[0].tanggal,
-          jam: data[0].jam,
-          status: data[0].status || 'Hadir'
-        };
+      if (!error && data) {
+        if (data.length > 0) {
+          return {
+            id: data[0].id,
+            anggotaId: data[0].anggota_id,
+            nama: data[0].nama,
+            tanggal: data[0].tanggal,
+            jam: data[0].jam,
+            status: data[0].status || 'Hadir'
+          };
+        } else {
+          // Supabase terhubung dan mengonfirmasi BELUM ABSEN (0 rows)
+          return null;
+        }
       }
     } catch (e) {
       console.error('Error checking attendance in Supabase:', e);
