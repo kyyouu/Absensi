@@ -186,12 +186,15 @@ async function getAttendanceAsync() {
   if (sb) {
     try {
       const { data, error } = await sb.from('kkn_attendance').select('*').order('created_at', { ascending: false });
+      if (error) {
+        console.error('❌ Error fetching attendance from Supabase:', error);
+      }
       if (!error && data) {
         const mapped = data.map(item => ({
           id: item.id,
           anggotaId: item.anggota_id,
           nama: item.nama,
-          tanggal: item.tanggal,
+          tanggal: String(item.tanggal || '').substring(0, 10),
           jam: item.jam,
           status: item.status || 'Hadir'
         }));
@@ -199,7 +202,7 @@ async function getAttendanceAsync() {
         return mapped;
       }
     } catch (e) {
-      console.error('Error fetching attendance from Supabase:', e);
+      console.error('Exception fetching attendance from Supabase:', e);
     }
   }
   return getAttendance();
@@ -244,12 +247,16 @@ async function addAttendanceAsync(anggotaId, nama) {
         status: 'Hadir'
       }]).select().single();
 
+      if (error) {
+        console.error('❌ Supabase Insert Error:', error);
+      }
+
       if (!error && data) {
         const record = {
           id: data.id,
           anggotaId: data.anggota_id,
           nama: data.nama,
-          tanggal: data.tanggal,
+          tanggal: String(data.tanggal || '').substring(0, 10),
           jam: data.jam,
           status: data.status || 'Hadir'
         };
@@ -259,7 +266,7 @@ async function addAttendanceAsync(anggotaId, nama) {
         return record;
       }
     } catch (e) {
-      console.error('Error adding attendance to Supabase:', e);
+      console.error('Exception adding attendance to Supabase:', e);
     }
   }
 

@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const attendance = await getAttendanceAsync();
     const today = getTodayDateString();
 
-    const todayAttendance = attendance.filter(a => a.tanggal === today);
+    const todayAttendance = attendance.filter(a => String(a.tanggal || '').substring(0, 10) === today);
 
     const totalAnggota = members.length;
     const hadirHariIni = todayAttendance.length;
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Filter untuk tabel hari ini / tanggal terpilih
     const targetDate = filterDate || today;
-    const filteredAttendance = attendance.filter(a => a.tanggal === targetDate);
+    const filteredAttendance = attendance.filter(a => String(a.tanggal || '').substring(0, 10) === targetDate);
 
     currentData = filteredAttendance.filter(function (a) {
       return a.nama.toLowerCase().includes(searchQuery.toLowerCase());
