@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', function () {
   updateClock();
   setInterval(updateClock, 1000);
 
+  // Check URL parameter reset (misal: index.html?reset=true)
+  if (window.location.search.includes('reset=true')) {
+    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify([]));
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   // ============================================================
   // SEARCHABLE DROPDOWN NAMA
   // ============================================================

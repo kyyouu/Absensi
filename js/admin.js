@@ -153,6 +153,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Reset Seluruh Absensi
+  const clearAllBtn = document.getElementById('clearAllAttendanceBtn');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', async function () {
+      if (confirm('Apakah Anda yakin ingin MENGHAPUS SELURUH DATA ABSENSI? Action ini akan mengosongkan riwayat absensi agar semua anggota bisa absen ulang.')) {
+        await clearAllAttendanceAsync();
+        loadTable();
+        alert('Seluruh data absensi telah di-reset!');
+      }
+    });
+  }
+
   // ============================================================
   // INISIALISASI & REALTIME STORAGE SYNC
   // ============================================================

@@ -321,6 +321,18 @@ function isAlreadyAttended(anggotaId, tanggal) {
   return attendance.find(a => parseInt(a.anggotaId) === targetId && a.tanggal === tanggal) || null;
 }
 
+async function clearAllAttendanceAsync() {
+  saveAttendance([]);
+  const sb = getSupabase();
+  if (sb) {
+    try {
+      await sb.from('kkn_attendance').delete().neq('id', 0);
+    } catch (e) {
+      console.error('Error clearing attendance in Supabase:', e);
+    }
+  }
+}
+
 function getTodayAttendance() {
   const today = getTodayDateString();
   return getAttendance().filter(a => a.tanggal === today);
