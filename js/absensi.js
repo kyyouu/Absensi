@@ -67,9 +67,8 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
       isNetworkAllowed = false;
       netCard.style.display = 'flex'; // Tampilkan peringatan HANYA jika bukan WiFi Posko
-      const ipText = netResult && netResult.currentIp ? ` (IP Anda: ${netResult.currentIp})` : '';
       if (netSubtitle) {
-        netSubtitle.textContent = `Absensi hanya dapat dilakukan melalui WiFi Posko KKN.${ipText}`;
+        netSubtitle.textContent = 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.';
       }
     }
 
