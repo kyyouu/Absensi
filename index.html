@@ -31,6 +31,20 @@
         <div class="date-display" id="currentDate">Memuat tanggal...</div>
       </div>
 
+      <!-- Network Warning Alert (Hanya muncul jika BUKAN WiFi Posko) -->
+      <div class="network-warning-alert" id="networkStatusCard" style="display:none;">
+        <div class="net-alert-icon">
+          <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <div class="net-alert-content">
+          <div class="net-alert-title">Peringatan Jaringan Posko</div>
+          <div class="net-alert-message" id="networkStatusSubtitle">Absensi hanya dapat dilakukan melalui WiFi Posko KKN.</div>
+        </div>
+        <button type="button" class="btn-refresh-net" id="btnRefreshNet" title="Segarkan Jaringan">
+          <i class="fas fa-arrows-rotate"></i>
+        </button>
+      </div>
+
       <!-- Search Nama -->
       <div class="form-group">
         <label class="form-label" for="searchMember">
@@ -142,6 +156,7 @@
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
+  <script src="js/network.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/absensi.js"></script>
 

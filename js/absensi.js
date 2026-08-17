@@ -39,6 +39,80 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ============================================================
+  // VALIDASI JARINGAN (WIFI POSKO KKN)
+  // ============================================================
+  const netCard = document.getElementById('networkStatusCard');
+  const netIcon = document.getElementById('networkStatusIcon');
+  const netTitle = document.getElementById('networkStatusTitle');
+  const netSubtitle = document.getElementById('networkStatusSubtitle');
+  const netPillText = document.getElementById('networkStatusPillText');
+  const btnRefreshNet = document.getElementById('btnRefreshNet');
+
+  let isNetworkAllowed = false;
+  let lastNetworkResult = null;
+
+  function updateNetworkUI(netResult) {
+    if (!netCard) return;
+
+    if (netResult && netResult.loading) {
+      netCard.style.display = 'none';
+      return;
+    }
+
+    lastNetworkResult = netResult;
+
+    if (netResult && netResult.isAllowed) {
+      isNetworkAllowed = true;
+      netCard.style.display = 'none'; // Sembunyikan banner jika terhubung (halaman bersih!)
+    } else {
+      isNetworkAllowed = false;
+      netCard.style.display = 'flex'; // Tampilkan peringatan HANYA jika bukan WiFi Posko
+      const ipText = netResult && netResult.currentIp ? ` (IP Anda: ${netResult.currentIp})` : '';
+      if (netSubtitle) {
+        netSubtitle.textContent = `Absensi hanya dapat dilakukan melalui WiFi Posko KKN.${ipText}`;
+      }
+    }
+
+    // Refresh status tombol jika member sedang terpilih atau belum
+    if (selectedMember) {
+      applyButtonState(selectedMember);
+    } else {
+      if (!isNetworkAllowed) {
+        hadirBtn.disabled = true;
+        hadirBtn.classList.add('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-lock"></i> KHUSUS WIFI POSKO';
+      } else {
+        hadirBtn.disabled = false;
+        hadirBtn.classList.remove('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+      }
+    }
+  }
+
+  async function checkNetworkState() {
+    updateNetworkUI({ loading: true });
+    const netResult = typeof verifyNetworkConnection === 'function'
+      ? await verifyNetworkConnection()
+      : { isAllowed: true, isDev: true, currentIp: 'Local' };
+    updateNetworkUI(netResult);
+    return netResult;
+  }
+
+  // Tombol Refresh Jaringan
+  if (btnRefreshNet) {
+    btnRefreshNet.addEventListener('click', async function () {
+      const icon = btnRefreshNet.querySelector('i');
+      if (icon) icon.classList.add('fa-spin');
+      await checkNetworkState();
+      if (icon) icon.classList.remove('fa-spin');
+      showToast('Status jaringan telah diperbarui.', 'info');
+    });
+  }
+
+  // Cek Jaringan saat halaman pertama kali dimuat
+  checkNetworkState();
+
+  // ============================================================
   // SEARCHABLE DROPDOWN NAMA
   // ============================================================
   let membersList = getMembers();
@@ -77,6 +151,33 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Helper untuk mengatur state tombol Hadir berdasarkan status absen & jaringan
+  async function applyButtonState(member) {
+    const today = getTodayDateString();
+    const existing = await isAlreadyAttendedAsync(member.id, today);
+
+    alreadyCard.style.display = 'none';
+    successCard.style.display = 'none';
+
+    if (existing) {
+      // Sudah absen — nonaktifkan tombol dan tampilkan info
+      hadirBtn.disabled = true;
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
+      showAlreadyCard(member, existing);
+    } else if (!isNetworkAllowed) {
+      // Belum absen tapi jaringan bukan WiFi Posko
+      hadirBtn.disabled = true;
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-lock"></i> KHUSUS WIFI POSKO';
+    } else {
+      // Belum absen dan jaringan WiFi Posko OK
+      hadirBtn.disabled = false;
+      hadirBtn.classList.remove('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+    }
+  }
+
   // Pilih anggota
   async function selectMember(member) {
     selectedMember = member;
@@ -87,23 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
     selectedNameEl.textContent = member.nama;
     selectedCard.style.display = 'block';
 
-    // Cek apakah sudah absen hari ini
-    const today = getTodayDateString();
-    const existing = await isAlreadyAttendedAsync(member.id, today);
-
-    alreadyCard.style.display = 'none';
-    successCard.style.display = 'none';
-    hadirBtn.disabled = false;
-    hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
-    hadirBtn.classList.remove('btn-disabled');
-
-    if (existing) {
-      // Sudah absen — nonaktifkan tombol dan tampilkan info
-      hadirBtn.disabled = true;
-      hadirBtn.classList.add('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
-      showAlreadyCard(member, existing);
-    }
+    await applyButtonState(member);
   }
 
   // Tampilkan card sudah absen
@@ -130,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderDropdown(filtered);
     dropdownList.style.display = 'block';
 
-    // Cek jika ketikan persis sama dengan salah satu anggota
+    // Cek jika ketikan persis sama dengan salah meanggota
     const exactMatch = membersList.find(m => m.nama.toLowerCase() === q.toLowerCase());
     if (exactMatch) {
       selectMember(exactMatch);
@@ -139,9 +224,15 @@ document.addEventListener('DOMContentLoaded', function () {
       selectedCard.style.display = 'none';
       alreadyCard.style.display = 'none';
       successCard.style.display = 'none';
-      hadirBtn.disabled = false;
-      hadirBtn.classList.remove('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+      if (!isNetworkAllowed) {
+        hadirBtn.disabled = true;
+        hadirBtn.classList.add('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-ban"></i> BUKAN WIFI POSKO';
+      } else {
+        hadirBtn.disabled = false;
+        hadirBtn.classList.remove('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+      }
     }
   });
 
@@ -156,7 +247,12 @@ document.addEventListener('DOMContentLoaded', function () {
   // TOMBOL HADIR
   // ============================================================
   hadirBtn.addEventListener('click', async function () {
-    if (hadirBtn.disabled) return;
+    if (hadirBtn.disabled) {
+      if (!isNetworkAllowed) {
+        showToast(NETWORK_CONFIG.DENIED_MESSAGE || 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.', 'error');
+      }
+      return;
+    }
 
     const currentMembers = membersList.length > 0 ? membersList : await getMembersAsync();
 
@@ -178,7 +274,24 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Loading state
+    // ------------------------------------------------------------
+    // PENGECEKAN ULANG JARINGAN (PRE-SUBMIT RE-CHECK)
+    // Supaya pengguna tidak bisa berpindah jaringan setelah buka page
+    // ------------------------------------------------------------
+    hadirBtn.disabled = true;
+    hadirBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifikasi Jaringan...';
+
+    const netCheckBeforeSubmit = await checkNetworkState();
+
+    if (!netCheckBeforeSubmit.isAllowed) {
+      showToast(NETWORK_CONFIG.DENIED_MESSAGE || 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.', 'error');
+      hadirBtn.disabled = true;
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-ban"></i> BUKAN WIFI POSKO';
+      return; // Hentikan proses, JANGAN simpan ke Supabase!
+    }
+
+    // Loading state simpan data
     hadirBtn.disabled = true;
     hadirBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
@@ -222,9 +335,16 @@ document.addEventListener('DOMContentLoaded', function () {
       selectedCard.style.display = 'none';
       alreadyCard.style.display = 'none';
       successCard.style.display = 'none';
-      hadirBtn.disabled = false;
-      hadirBtn.classList.remove('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+
+      if (!isNetworkAllowed) {
+        hadirBtn.disabled = true;
+        hadirBtn.classList.add('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-ban"></i> BUKAN WIFI POSKO';
+      } else {
+        hadirBtn.disabled = false;
+        hadirBtn.classList.remove('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
+      }
 
       // Scroll ke atas
       window.scrollTo({ top: 0, behavior: 'smooth' });
