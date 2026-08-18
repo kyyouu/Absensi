@@ -93,7 +93,7 @@ function initAbsensiPage() {
     if (data.length === 0) {
       historyBody.innerHTML = `
         <tr>
-          <td colspan="5" class="empty-state">
+          <td colspan="6" class="empty-state">
             <i class="fas fa-clipboard-list"></i>
             <p>Belum ada data absensi yang sesuai filter.</p>
           </td>
@@ -110,10 +110,32 @@ function initAbsensiPage() {
           <td>${formatTanggalShort(record.tanggal)}</td>
           <td>${formatJamShort(record.jam)}</td>
           <td><span class="badge badge-hadir">Hadir</span></td>
+          <td>
+            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id}" data-nama="${record.nama}" data-tanggal="${formatTanggalShort(record.tanggal)}">
+              <i class="fas fa-trash"></i> Hapus
+            </button>
+          </td>
         </tr>
       `;
     }).join('');
   }
+
+  // Event listener hapus per baris absensi (Riwayat)
+  historyBody.addEventListener('click', async function (e) {
+    const deleteBtn = e.target.closest('.btn-delete-attendance');
+    if (!deleteBtn) return;
+
+    const id = deleteBtn.dataset.id;
+    const nama = deleteBtn.dataset.nama;
+    const tanggal = deleteBtn.dataset.tanggal;
+
+    if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tanggal}?`)) {
+      await deleteAttendanceAsync(id);
+      await loadHistory();
+      showToast(`Data absensi ${nama} telah berhasil dihapus.`, 'success');
+    }
+  });
+
 
   const searchInput = document.getElementById('searchHistory');
   if (searchInput) {

@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (data.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="empty-state">
+          <td colspan="6" class="empty-state">
             <i class="fas fa-clipboard-list"></i>
             <p>Belum ada data absensi yang sesuai filter.</p>
           </td>
@@ -140,10 +140,35 @@ document.addEventListener('DOMContentLoaded', function () {
           <td>${formatTanggalShort(record.tanggal)}</td>
           <td>${formatJamShort(record.jam)}</td>
           <td><span class="badge badge-hadir">Hadir</span></td>
+          <td>
+            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id}" data-nama="${record.nama}" data-tanggal="${formatTanggalShort(record.tanggal)}">
+              <i class="fas fa-trash"></i> Hapus
+            </button>
+          </td>
         </tr>
       `;
     }).join('');
   }
+
+  // Event listener hapus per baris absensi
+  const attendanceTbody = document.getElementById('attendanceTableBody');
+  if (attendanceTbody) {
+    attendanceTbody.addEventListener('click', async function (e) {
+      const deleteBtn = e.target.closest('.btn-delete-attendance');
+      if (!deleteBtn) return;
+
+      const id = deleteBtn.dataset.id;
+      const nama = deleteBtn.dataset.nama;
+      const tanggal = deleteBtn.dataset.tanggal;
+
+      if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tanggal}?`)) {
+        await deleteAttendanceAsync(id);
+        loadTable();
+        alert(`Data absensi ${nama} telah berhasil dihapus.`);
+      }
+    });
+  }
+
 
   // Search real-time
   const searchInput = document.getElementById('searchAttendance');

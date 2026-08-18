@@ -346,6 +346,28 @@ async function clearAllAttendanceAsync() {
   }
 }
 
+async function deleteAttendanceAsync(id) {
+  const sb = getSupabase();
+  const targetId = parseInt(id);
+  if (sb) {
+    try {
+      await sb.from('kkn_attendance').delete().eq('id', targetId);
+    } catch (e) {
+      console.error('Error deleting attendance from Supabase:', e);
+    }
+  }
+  return deleteAttendance(targetId);
+}
+
+function deleteAttendance(id) {
+  const attendance = getAttendance();
+  const targetId = parseInt(id);
+  const filtered = attendance.filter(a => parseInt(a.id) !== targetId);
+  if (filtered.length === attendance.length) return false;
+  saveAttendance(filtered);
+  return true;
+}
+
 function getTodayAttendance() {
   const today = getTodayDateString();
   return getAttendance().filter(a => a.tanggal === today);
