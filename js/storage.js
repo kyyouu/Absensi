@@ -441,6 +441,58 @@ function getTodayDateString() {
   return `${year}-${month}-${day}`;
 }
 
+function parseToDateObj(dateStr) {
+  if (!dateStr) return null;
+  const s = String(dateStr).trim();
+  if (!s) return null;
+
+  // ISO YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
+  if (s.match(/^\d{4}-\d{2}-\d{2}/)) {
+    const parts = s.substring(0, 10).split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
+
+  // DD/MM/YYYY or MM/DD/YYYY or DD-MM-YYYY
+  if (s.includes('/') || s.includes('-')) {
+    const delimiter = s.includes('/') ? '/' : '-';
+    const parts = s.split(delimiter);
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      }
+      if (parts[2].length === 4) {
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      }
+    }
+  }
+
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  return null;
+}
+
+function isDateInRange(recordDateStr, startDateStr, endDateStr) {
+  if (!startDateStr && !endDateStr) return true;
+  const recDate = parseToDateObj(recordDateStr);
+  if (!recDate) return true;
+
+  let start = parseToDateObj(startDateStr);
+  let end = parseToDateObj(endDateStr);
+
+  if (start && end && start.getTime() > end.getTime()) {
+    const temp = start;
+    start = end;
+    end = temp;
+  }
+
+  if (start && recDate.getTime() < start.getTime()) return false;
+  if (end && recDate.getTime() > end.getTime()) return false;
+
+  return true;
+}
+
 function formatTanggalIndonesia(dateStr) {
   if (!dateStr) return '';
   const bulan = [

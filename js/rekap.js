@@ -72,21 +72,8 @@ function initAbsensiPage() {
     let data = await getAttendanceAsync();
 
     // Filter rentang tanggal
-    if (startDate && endDate) {
-      data = data.filter(a => {
-        const t = cleanDateStr(a.tanggal);
-        return t >= startDate && t <= endDate;
-      });
-    } else if (startDate) {
-      data = data.filter(a => {
-        const t = cleanDateStr(a.tanggal);
-        return t >= startDate;
-      });
-    } else if (endDate) {
-      data = data.filter(a => {
-        const t = cleanDateStr(a.tanggal);
-        return t <= endDate;
-      });
+    if (startDate || endDate) {
+      data = data.filter(a => isDateInRange(a.tanggal, startDate, endDate));
     }
 
     // Filter nama
@@ -204,15 +191,8 @@ function initAbsensiPage() {
   if (exportBtn) {
     exportBtn.addEventListener('click', async function () {
       let data = await getAttendanceAsync();
-      if (startDate && endDate) {
-        data = data.filter(a => {
-          const t = cleanDateStr(a.tanggal);
-          return t >= startDate && t <= endDate;
-        });
-      } else if (startDate) {
-        data = data.filter(a => cleanDateStr(a.tanggal) >= startDate);
-      } else if (endDate) {
-        data = data.filter(a => cleanDateStr(a.tanggal) <= endDate);
+      if (startDate || endDate) {
+        data = data.filter(a => isDateInRange(a.tanggal, startDate, endDate));
       }
       if (searchQuery) data = data.filter(a => a.nama.toLowerCase().includes(searchQuery.toLowerCase()));
       data.sort((a, b) => {

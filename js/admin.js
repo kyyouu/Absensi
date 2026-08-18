@@ -75,25 +75,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Filter untuk tabel berdasarkan rentang tanggal
     let filteredAttendance = attendance;
-    if (filterStartDate && filterEndDate) {
-      filteredAttendance = attendance.filter(a => {
-        const t = String(a.tanggal || '').substring(0, 10);
-        return t >= filterStartDate && t <= filterEndDate;
-      });
-    } else if (filterStartDate) {
-      filteredAttendance = attendance.filter(a => {
-        const t = String(a.tanggal || '').substring(0, 10);
-        return t >= filterStartDate;
-      });
-    } else if (filterEndDate) {
-      filteredAttendance = attendance.filter(a => {
-        const t = String(a.tanggal || '').substring(0, 10);
-        return t <= filterEndDate;
-      });
+    if (filterStartDate || filterEndDate) {
+      filteredAttendance = attendance.filter(a => isDateInRange(a.tanggal, filterStartDate, filterEndDate));
     } else {
       // Jika tidak diisi, tampilkan absensi hari ini secara default
       const targetDate = today;
-      filteredAttendance = attendance.filter(a => String(a.tanggal || '').substring(0, 10) === targetDate);
+      filteredAttendance = attendance.filter(a => isDateInRange(a.tanggal, targetDate, targetDate));
     }
 
     currentData = filteredAttendance.filter(function (a) {
