@@ -125,7 +125,14 @@
               Absensi Hari Ini
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <input type="date" class="filter-input" id="filterDate" style="padding-left: 12px; width: 150px;" />
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:4px;">
+                  <i class="fas fa-calendar-alt" style="color:var(--color-primary);"></i> Dari:
+                </span>
+                <input type="date" class="filter-input" id="filterStartDate" style="padding-left: 10px; width: 140px;" title="Tanggal Mulai" />
+                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary);">s/d</span>
+                <input type="date" class="filter-input" id="filterEndDate" style="padding-left: 10px; width: 140px;" title="Tanggal Akhir" />
+              </div>
               <button class="btn-reset" id="resetFilter">
                 <i class="fas fa-rotate-right"></i> Reset Filter
               </button>
@@ -178,10 +185,10 @@
 
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/config.js?v=1.0.4"></script>
+  <script src="js/storage.js?v=1.0.4"></script>
+  <script src="js/auth.js?v=1.0.4"></script>
+  <script src="js/admin.js?v=1.0.4"></script>
 
 </body>
 </html>

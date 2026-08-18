@@ -108,9 +108,16 @@
                 placeholder="Cari nama anggota..."
               />
             </div>
-            <input type="date" class="filter-input" id="filterDateHistory" style="padding-left:12px; min-width:150px;" />
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:4px;">
+                <i class="fas fa-calendar-alt" style="color:var(--color-primary);"></i> Dari:
+              </span>
+              <input type="date" class="filter-input" id="filterStartDateHistory" style="padding-left:10px; width:140px;" title="Tanggal Mulai" />
+              <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary);">s/d</span>
+              <input type="date" class="filter-input" id="filterEndDateHistory" style="padding-left:10px; width:140px;" title="Tanggal Akhir" />
+            </div>
             <button class="btn-reset" id="resetHistoryFilter">
-              <i class="fas fa-rotate-right"></i> Reset
+              <i class="fas fa-rotate-right"></i> Reset Filter
             </button>
           </div>
 
@@ -147,10 +154,10 @@
 
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/rekap.js"></script>
+  <script src="js/config.js?v=1.0.4"></script>
+  <script src="js/storage.js?v=1.0.4"></script>
+  <script src="js/auth.js?v=1.0.4"></script>
+  <script src="js/rekap.js?v=1.0.4"></script>
 
 </body>
 </html>

@@ -73,20 +73,43 @@ document.addEventListener('DOMContentLoaded', function () {
     if (elHadir) elHadir.textContent = hadirHariIni;
     if (elBelum) elBelum.textContent = Math.max(0, belumHadir);
 
-    // Filter untuk tabel hari ini / tanggal terpilih
-    const targetDate = filterDate || today;
-    const filteredAttendance = attendance.filter(a => String(a.tanggal || '').substring(0, 10) === targetDate);
+    // Filter untuk tabel berdasarkan rentang tanggal
+    let filteredAttendance = attendance;
+    if (filterStartDate && filterEndDate) {
+      filteredAttendance = attendance.filter(a => {
+        const t = String(a.tanggal || '').substring(0, 10);
+        return t >= filterStartDate && t <= filterEndDate;
+      });
+    } else if (filterStartDate) {
+      filteredAttendance = attendance.filter(a => {
+        const t = String(a.tanggal || '').substring(0, 10);
+        return t >= filterStartDate;
+      });
+    } else if (filterEndDate) {
+      filteredAttendance = attendance.filter(a => {
+        const t = String(a.tanggal || '').substring(0, 10);
+        return t <= filterEndDate;
+      });
+    } else {
+      // Jika tidak diisi, tampilkan absensi hari ini secara default
+      const targetDate = today;
+      filteredAttendance = attendance.filter(a => String(a.tanggal || '').substring(0, 10) === targetDate);
+    }
 
     currentData = filteredAttendance.filter(function (a) {
       return a.nama.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
-    currentData.sort((a, b) => b.jam.localeCompare(a.jam));
+    currentData.sort((a, b) => {
+      if (b.tanggal !== a.tanggal) return b.tanggal.localeCompare(a.tanggal);
+      return b.jam.localeCompare(a.jam);
+    });
     renderTable(currentData);
   }
 
   let currentData = [];
-  let filterDate = getTodayDateString();
+  let filterStartDate = getTodayDateString();
+  let filterEndDate = getTodayDateString();
   let searchQuery = '';
 
   function loadTable() {
@@ -102,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <tr>
           <td colspan="5" class="empty-state">
             <i class="fas fa-clipboard-list"></i>
-            <p>Belum ada data absensi.</p>
+            <p>Belum ada data absensi yang sesuai filter.</p>
           </td>
         </tr>
       `;
@@ -131,12 +154,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Filter tanggal
-  const filterDateInput = document.getElementById('filterDate');
-  if (filterDateInput) {
-    filterDateInput.value = getTodayDateString();
-    filterDateInput.addEventListener('change', function () {
-      filterDate = this.value;
+  // Filter tanggal mulai & akhir
+  const filterStartInput = document.getElementById('filterStartDate');
+  const filterEndInput = document.getElementById('filterEndDate');
+
+  if (filterStartInput) {
+    filterStartInput.value = getTodayDateString();
+    filterStartInput.addEventListener('change', function () {
+      filterStartDate = this.value;
+      loadTable();
+    });
+  }
+
+  if (filterEndInput) {
+    filterEndInput.value = getTodayDateString();
+    filterEndInput.addEventListener('change', function () {
+      filterEndDate = this.value;
       loadTable();
     });
   }
@@ -145,9 +178,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const resetFilterBtn = document.getElementById('resetFilter');
   if (resetFilterBtn) {
     resetFilterBtn.addEventListener('click', function () {
-      filterDate = getTodayDateString();
+      filterStartDate = getTodayDateString();
+      filterEndDate = getTodayDateString();
       searchQuery = '';
-      if (filterDateInput) filterDateInput.value = filterDate;
+      if (filterStartInput) filterStartInput.value = filterStartDate;
+      if (filterEndInput) filterEndInput.value = filterEndDate;
       if (searchInput) searchInput.value = '';
       loadTable();
     });

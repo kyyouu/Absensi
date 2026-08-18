@@ -61,14 +61,19 @@ function initAbsensiPage() {
   if (adminUsernameEl && session) adminUsernameEl.textContent = session.username;
 
   let searchQuery = '';
-  let filterDate = '';
+  let startDate = '';
+  let endDate = '';
 
   async function loadHistory() {
     let data = await getAttendanceAsync();
 
-    // Filter tanggal
-    if (filterDate) {
-      data = data.filter(a => a.tanggal === filterDate);
+    // Filter rentang tanggal
+    if (startDate && endDate) {
+      data = data.filter(a => a.tanggal >= startDate && a.tanggal <= endDate);
+    } else if (startDate) {
+      data = data.filter(a => a.tanggal >= startDate);
+    } else if (endDate) {
+      data = data.filter(a => a.tanggal <= endDate);
     }
 
     // Filter nama
@@ -90,7 +95,7 @@ function initAbsensiPage() {
         <tr>
           <td colspan="5" class="empty-state">
             <i class="fas fa-clipboard-list"></i>
-            <p>Belum ada data absensi.</p>
+            <p>Belum ada data absensi yang sesuai filter.</p>
           </td>
         </tr>
       `;
@@ -118,10 +123,18 @@ function initAbsensiPage() {
     });
   }
 
-  const filterDateInput = document.getElementById('filterDateHistory');
-  if (filterDateInput) {
-    filterDateInput.addEventListener('change', function () {
-      filterDate = this.value;
+  const startInput = document.getElementById('filterStartDateHistory');
+  if (startInput) {
+    startInput.addEventListener('change', function () {
+      startDate = this.value;
+      loadHistory();
+    });
+  }
+
+  const endInput = document.getElementById('filterEndDateHistory');
+  if (endInput) {
+    endInput.addEventListener('change', function () {
+      endDate = this.value;
       loadHistory();
     });
   }
@@ -130,9 +143,11 @@ function initAbsensiPage() {
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
       searchQuery = '';
-      filterDate = '';
+      startDate = '';
+      endDate = '';
       if (searchInput) searchInput.value = '';
-      if (filterDateInput) filterDateInput.value = '';
+      if (startInput) startInput.value = '';
+      if (endInput) endInput.value = '';
       loadHistory();
     });
   }
@@ -140,15 +155,22 @@ function initAbsensiPage() {
   // Export CSV
   const exportBtn = document.getElementById('exportCsvHistory');
   if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      let data = getAttendance();
-      if (filterDate) data = data.filter(a => a.tanggal === filterDate);
+    exportBtn.addEventListener('click', async function () {
+      let data = await getAttendanceAsync();
+      if (startDate && endDate) {
+        data = data.filter(a => a.tanggal >= startDate && a.tanggal <= endDate);
+      } else if (startDate) {
+        data = data.filter(a => a.tanggal >= startDate);
+      } else if (endDate) {
+        data = data.filter(a => a.tanggal <= endDate);
+      }
       if (searchQuery) data = data.filter(a => a.nama.toLowerCase().includes(searchQuery.toLowerCase()));
       data.sort((a, b) => {
         if (b.tanggal !== a.tanggal) return b.tanggal.localeCompare(a.tanggal);
         return b.jam.localeCompare(a.jam);
       });
-      exportToCSV(data, 'riwayat-absensi-kkn');
+      const fileSuffix = startDate && endDate ? `-${startDate}-sd-${endDate}` : '';
+      exportToCSV(data, `riwayat-absensi-kkn${fileSuffix}`);
     });
   }
 
