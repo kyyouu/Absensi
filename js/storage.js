@@ -348,12 +348,17 @@ async function clearAllAttendanceAsync() {
 
 async function deleteAttendanceAsync(id) {
   const sb = getSupabase();
-  const targetId = parseInt(id);
+  const targetId = isNaN(parseInt(id)) ? id : parseInt(id);
   if (sb) {
     try {
-      await sb.from('kkn_attendance').delete().eq('id', targetId);
+      const { data, error } = await sb.from('kkn_attendance').delete().eq('id', targetId).select();
+      if (error) {
+        console.error('❌ Error deleting attendance from Supabase:', error);
+      } else {
+        console.log('✅ Attendance deleted from Supabase:', data);
+      }
     } catch (e) {
-      console.error('Error deleting attendance from Supabase:', e);
+      console.error('Exception deleting attendance from Supabase:', e);
     }
   }
   return deleteAttendance(targetId);

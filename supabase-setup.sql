@@ -21,14 +21,21 @@ CREATE TABLE IF NOT EXISTS public.kkn_attendance (
     CONSTRAINT unique_absen_per_hari UNIQUE (anggota_id, tanggal)
 );
 
--- 3. Matikan RLS (Row Level Security) agar dapat diakses publik dari Web Vanilla JS
+-- 3. Matikan RLS (Row Level Security) agar dapat di-select, insert, dan delete dari Web Vanilla JS
 ALTER TABLE public.kkn_members DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.kkn_attendance DISABLE ROW LEVEL SECURITY;
 
--- 3b. Grant akses penuh ke role anon (digunakan oleh Supabase API Key publik)
-GRANT ALL ON public.kkn_members TO anon;
-GRANT ALL ON public.kkn_attendance TO anon;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+-- 3b. Grant akses penuh ke role anon & authenticated (digunakan oleh Supabase API Key publik)
+GRANT ALL ON public.kkn_members TO anon, authenticated, service_role;
+GRANT ALL ON public.kkn_attendance TO anon, authenticated, service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- 3c. Buat Kebijakan RLS (Jika RLS diaktifkan di Supabase Dashboard)
+DROP POLICY IF EXISTS "Allow all for kkn_attendance" ON public.kkn_attendance;
+CREATE POLICY "Allow all for kkn_attendance" ON public.kkn_attendance FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all for kkn_members" ON public.kkn_members;
+CREATE POLICY "Allow all for kkn_members" ON public.kkn_members FOR ALL USING (true) WITH CHECK (true);
 
 -- 4. Masukkan Data Awal 19 Anggota KKN
 INSERT INTO public.kkn_members (id, nama) VALUES
