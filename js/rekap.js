@@ -60,19 +60,18 @@ function initAbsensiPage() {
   const adminUsernameEl = document.getElementById('adminUsername');
   if (adminUsernameEl && session) adminUsernameEl.textContent = session.username;
 
-  let searchQuery = '';
+  let singleDate = '';
   let startDate = '';
   let endDate = '';
-
-  function cleanDateStr(d) {
-    return String(d || '').trim().substring(0, 10);
-  }
+  let searchQuery = '';
 
   async function loadHistory() {
     let data = await getAttendanceAsync();
 
-    // Filter rentang tanggal
-    if (startDate || endDate) {
+    // Filter tanggal spesifik atau rentang tanggal
+    if (singleDate) {
+      data = data.filter(a => isDateInRange(a.tanggal, singleDate, singleDate));
+    } else if (startDate || endDate) {
       data = data.filter(a => isDateInRange(a.tanggal, startDate, endDate));
     }
 
@@ -153,10 +152,30 @@ function initAbsensiPage() {
     });
   }
 
+  const singleInput = document.getElementById('filterSingleDateHistory');
+  if (singleInput) {
+    const onSingleChange = function () {
+      singleDate = this.value;
+      if (singleDate) {
+        startDate = '';
+        endDate = '';
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
+      }
+      loadHistory();
+    };
+    singleInput.addEventListener('change', onSingleChange);
+    singleInput.addEventListener('input', onSingleChange);
+  }
+
   const startInput = document.getElementById('filterStartDateHistory');
   if (startInput) {
     const onStartChange = function () {
       startDate = this.value;
+      if (startDate) {
+        singleDate = '';
+        if (singleInput) singleInput.value = '';
+      }
       loadHistory();
     };
     startInput.addEventListener('change', onStartChange);
@@ -167,6 +186,10 @@ function initAbsensiPage() {
   if (endInput) {
     const onEndChange = function () {
       endDate = this.value;
+      if (endDate) {
+        singleDate = '';
+        if (singleInput) singleInput.value = '';
+      }
       loadHistory();
     };
     endInput.addEventListener('change', onEndChange);
@@ -176,9 +199,11 @@ function initAbsensiPage() {
   const resetBtn = document.getElementById('resetHistoryFilter');
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
-      searchQuery = '';
+      singleDate = '';
       startDate = '';
       endDate = '';
+      searchQuery = '';
+      if (singleInput) singleInput.value = '';
       if (searchInput) searchInput.value = '';
       if (startInput) startInput.value = '';
       if (endInput) endInput.value = '';
@@ -191,7 +216,9 @@ function initAbsensiPage() {
   if (exportBtn) {
     exportBtn.addEventListener('click', async function () {
       let data = await getAttendanceAsync();
-      if (startDate || endDate) {
+      if (singleDate) {
+        data = data.filter(a => isDateInRange(a.tanggal, singleDate, singleDate));
+      } else if (startDate || endDate) {
         data = data.filter(a => isDateInRange(a.tanggal, startDate, endDate));
       }
       if (searchQuery) data = data.filter(a => a.nama.toLowerCase().includes(searchQuery.toLowerCase()));

@@ -150,32 +150,19 @@
           </div>
         </div>
 
-        <!-- Tabel Absensi Hari Ini -->
+        <!-- Tabel Absensi -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">
               <i class="fas fa-list-check"></i>
-              Absensi Hari Ini
+              Data Absensi Real-Time
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:4px;">
-                  <i class="fas fa-calendar-alt" style="color:var(--color-primary);"></i> Dari:
-                </span>
-                <input type="date" class="filter-input" id="filterStartDate" style="padding-left: 10px; width: 140px;" title="Tanggal Mulai" />
-                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary);">s/d</span>
-                <input type="date" class="filter-input" id="filterEndDate" style="padding-left: 10px; width: 140px;" title="Tanggal Akhir" />
-              </div>
-              <button class="btn-reset" id="resetFilter">
-                <i class="fas fa-rotate-right"></i> Reset Filter
-              </button>
-              <button class="btn btn-danger" id="clearAllAttendanceBtn" style="font-size:0.825rem; padding: 6px 12px;">
-                <i class="fas fa-trash-alt"></i> Reset Absensi
-              </button>
-            </div>
+            <button class="btn btn-danger" id="clearAllAttendanceBtn" style="font-size:0.825rem; padding: 6px 12px;">
+              <i class="fas fa-trash-alt"></i> Reset Absensi
+            </button>
           </div>
 
-          <!-- Search -->
+          <!-- Filters -->
           <div class="filters-bar">
             <div class="filter-input-wrap">
               <i class="fas fa-search search-icon"></i>
@@ -185,6 +172,26 @@
                 id="searchAttendance"
                 placeholder="Cari nama anggota..."
               />
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:4px;">
+                  <i class="fas fa-calendar-day" style="color:var(--color-primary);"></i> Tanggal:
+                </span>
+                <input type="date" class="filter-input" id="filterSingleDate" style="padding-left:10px; width:140px;" title="Pilih Satu Tanggal Spesifik" />
+              </div>
+              <span style="font-size:0.8rem; color:var(--color-text-muted);">atau</span>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:4px;">
+                  <i class="fas fa-calendar-week" style="color:var(--color-primary);"></i> Dari:
+                </span>
+                <input type="date" class="filter-input" id="filterStartDate" style="padding-left:10px; width:140px;" title="Tanggal Mulai" />
+                <span style="font-size:0.825rem; font-weight:600; color:var(--color-text-secondary);">s/d</span>
+                <input type="date" class="filter-input" id="filterEndDate" style="padding-left:10px; width:140px;" title="Tanggal Akhir" />
+              </div>
+              <button class="btn-reset" id="resetFilter">
+                <i class="fas fa-rotate-right"></i> Reset Filter
+              </button>
             </div>
           </div>
 
@@ -219,11 +226,11 @@
 
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=1.0.8"></script>
-  <script src="js/network.js?v=1.0.8"></script>
-  <script src="js/storage.js?v=1.0.8"></script>
-  <script src="js/auth.js?v=1.0.8"></script>
-  <script src="js/admin.js?v=1.0.8"></script>
+  <script src="js/config.js?v=1.0.9"></script>
+  <script src="js/network.js?v=1.0.9"></script>
+  <script src="js/storage.js?v=1.0.9"></script>
+  <script src="js/auth.js?v=1.0.9"></script>
+  <script src="js/admin.js?v=1.0.9"></script>
 
 </body>
 </html>

@@ -59,3 +59,21 @@ INSERT INTO public.kkn_members (id, nama) VALUES
 (18, 'Suci Melati'),
 (19, 'Wildan Handanto')
 ON CONFLICT (id) DO NOTHING;
+
+-- 5. Masukkan Data Absensi "Hadir" Semua Anggota (Tanggal 12 s/d 18 Agustus 2026)
+INSERT INTO public.kkn_attendance (anggota_id, nama, tanggal, jam, status)
+SELECT 
+    m.id AS anggota_id,
+    m.nama AS nama,
+    t.tanggal::DATE AS tanggal,
+    '08:00:00'::TIME AS jam,
+    'Hadir' AS status
+FROM public.kkn_members m
+CROSS JOIN (
+    SELECT generate_series(
+        '2026-08-12'::DATE,
+        '2026-08-18'::DATE,
+        '1 day'::INTERVAL
+    )::DATE AS tanggal
+) t
+ON CONFLICT (anggota_id, tanggal) DO NOTHING;
