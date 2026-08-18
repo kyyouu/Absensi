@@ -201,6 +201,57 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ============================================================
+  // PENGATURAN LOKASI GPS POSKO
+  // ============================================================
+  const coordsDisplay = document.getElementById('poskoCoordsDisplay');
+  const radiusInput = document.getElementById('poskoRadiusInput');
+  const btnSetLocation = document.getElementById('btnSetCurrentLocation');
+  const btnSaveGps = document.getElementById('btnSaveGpsConfig');
+
+  function updateGpsConfigUI() {
+    if (!coordsDisplay) return;
+    const config = getPoskoLocationConfig();
+    if (config.lat !== null && config.lng !== null) {
+      coordsDisplay.innerHTML = `<span style="color:var(--color-success);"><i class="fas fa-circle-check"></i> Lat: ${config.lat.toFixed(6)}, Lng: ${config.lng.toFixed(6)} (Radius: ${config.radius}m)</span>`;
+    } else {
+      coordsDisplay.innerHTML = `<span style="color:var(--color-warning);"><i class="fas fa-triangle-exclamation"></i> Belum Diatur (Menggunakan Koordinat Default)</span>`;
+    }
+    if (radiusInput) radiusInput.value = config.radius || 50;
+  }
+
+  if (btnSetLocation) {
+    btnSetLocation.addEventListener('click', async function () {
+      btnSetLocation.disabled = true;
+      btnSetLocation.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membaca GPS HP...';
+      const loc = typeof getDeviceLocation === 'function' ? await getDeviceLocation() : null;
+      btnSetLocation.disabled = false;
+      btnSetLocation.innerHTML = '<i class="fas fa-crosshairs"></i> Set Lokasi Posko Saat Ini (GPS)';
+
+      if (!loc || loc.error) {
+        alert(loc ? loc.message : 'Gagal mengakses GPS browser.');
+        return;
+      }
+
+      const radius = radiusInput ? radiusInput.value : 50;
+      savePoskoLocationConfig(loc.lat, loc.lng, radius, true);
+      updateGpsConfigUI();
+      alert(`✅ Lokasi Posko KKN Berhasil Disimpan!\n\nLatitude: ${loc.lat.toFixed(6)}\nLongitude: ${loc.lng.toFixed(6)}\nAkurasi GPS HP: ~${loc.accuracy} meter\nRadius Maksimal: ${radius} meter`);
+    });
+  }
+
+  if (btnSaveGps) {
+    btnSaveGps.addEventListener('click', function () {
+      const config = getPoskoLocationConfig();
+      const radius = radiusInput ? radiusInput.value : 50;
+      savePoskoLocationConfig(config.lat, config.lng, radius, true);
+      updateGpsConfigUI();
+      alert('✅ Jarak radius lokasi berhasil diperbarui.');
+    });
+  }
+
+  updateGpsConfigUI();
+
+  // ============================================================
   // INISIALISASI & REALTIME STORAGE / POLLING SYNC
   // ============================================================
   loadTable();

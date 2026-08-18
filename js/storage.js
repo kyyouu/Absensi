@@ -7,6 +7,7 @@ const KEYS = {
   MEMBERS: 'kkn_members',
   ATTENDANCE: 'kkn_attendance',
   ADMIN_SESSION: 'kkn_admin_session',
+  POSKO_LOCATION: 'kkn_posko_location',
 };
 
 const DEFAULT_MEMBERS = [
@@ -412,6 +413,33 @@ function formatTanggalShort(dateStr) {
 
 function formatJamShort(jamStr) {
   return jamStr ? jamStr.substring(0, 5) : '';
+}
+
+function getPoskoLocationConfig() {
+  const defaultLoc = typeof LOCATION_CONFIG !== 'undefined' ? LOCATION_CONFIG : {};
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(KEYS.POSKO_LOCATION);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {}
+
+  return {
+    lat: saved && saved.lat !== null && typeof saved.lat !== 'undefined' ? saved.lat : (defaultLoc.POSKO_LAT || null),
+    lng: saved && saved.lng !== null && typeof saved.lng !== 'undefined' ? saved.lng : (defaultLoc.POSKO_LNG || null),
+    radius: saved && saved.radius ? Number(saved.radius) : (defaultLoc.MAX_RADIUS_METERS || 50),
+    enable: saved && typeof saved.enable !== 'undefined' ? Boolean(saved.enable) : (defaultLoc.ENABLE_GEOLOCATION !== false)
+  };
+}
+
+function savePoskoLocationConfig(lat, lng, radius = 50, enable = true) {
+  const data = {
+    lat: lat !== null ? Number(lat) : null,
+    lng: lng !== null ? Number(lng) : null,
+    radius: Number(radius) || 50,
+    enable: Boolean(enable)
+  };
+  localStorage.setItem(KEYS.POSKO_LOCATION, JSON.stringify(data));
+  return data;
 }
 
 initializeData();

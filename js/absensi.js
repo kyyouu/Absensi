@@ -49,26 +49,37 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnRefreshNet = document.getElementById('btnRefreshNet');
 
   let isNetworkAllowed = false;
+  let isLocationAllowed = false;
   let lastNetworkResult = null;
+  let lastLocationResult = null;
 
-  function updateNetworkUI(netResult) {
+  function updateNetworkUI(netResult, locResult) {
     if (!netCard) return;
 
-    if (netResult && netResult.loading) {
+    if ((netResult && netResult.loading) || (locResult && locResult.loading)) {
       netCard.style.display = 'none';
       return;
     }
 
-    lastNetworkResult = netResult;
+    if (netResult && !netResult.loading) lastNetworkResult = netResult;
+    if (locResult && !locResult.loading) lastLocationResult = locResult;
 
-    if (netResult && netResult.isAllowed) {
-      isNetworkAllowed = true;
-      netCard.style.display = 'none'; // Sembunyikan banner jika terhubung (halaman bersih!)
+    const netOK = lastNetworkResult ? lastNetworkResult.isAllowed : true;
+    const locOK = lastLocationResult ? lastLocationResult.isAllowed : true;
+
+    isNetworkAllowed = netOK;
+    isLocationAllowed = locOK;
+
+    if (netOK && locOK) {
+      netCard.style.display = 'none'; // Sembunyikan banner jika terhubung & lokasi pas
     } else {
-      isNetworkAllowed = false;
-      netCard.style.display = 'flex'; // Tampilkan peringatan HANYA jika bukan WiFi Posko
-      if (netSubtitle) {
-        netSubtitle.textContent = 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.';
+      netCard.style.display = 'flex'; // Tampilkan peringatan
+      if (!netOK) {
+        if (netTitle) netTitle.textContent = 'Peringatan Jaringan Posko';
+        if (netSubtitle) netSubtitle.textContent = lastNetworkResult ? lastNetworkResult.message : 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.';
+      } else if (!locOK) {
+        if (netTitle) netTitle.textContent = 'Peringatan Lokasi GPS';
+        if (netSubtitle) netSubtitle.textContent = lastLocationResult ? lastLocationResult.message : 'Anda berada di luar radius Posko KKN.';
       }
     }
 
@@ -79,7 +90,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isNetworkAllowed) {
         hadirBtn.disabled = true;
         hadirBtn.classList.add('btn-disabled');
-        hadirBtn.innerHTML = '<i class="fas fa-lock"></i> KHUSUS WIFI POSKO';
+        hadirBtn.innerHTML = '<i class="fas fa-wifi"></i> KHUSUS WIFI POSKO';
+      } else if (!isLocationAllowed) {
+        hadirBtn.disabled = true;
+        hadirBtn.classList.add('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-location-dot"></i> DILUAR RADIUS POSKO';
       } else {
         hadirBtn.disabled = false;
         hadirBtn.classList.remove('btn-disabled');
@@ -89,12 +104,18 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function checkNetworkState() {
-    updateNetworkUI({ loading: true });
+    updateNetworkUI({ loading: true }, { loading: true });
+
     const netResult = typeof verifyNetworkConnection === 'function'
       ? await verifyNetworkConnection()
       : { isAllowed: true, isDev: true, currentIp: 'Local' };
-    updateNetworkUI(netResult);
-    return netResult;
+
+    const locResult = typeof verifyLocationConnection === 'function'
+      ? await verifyLocationConnection()
+      : { isAllowed: true };
+
+    updateNetworkUI(netResult, locResult);
+    return { netResult, locResult };
   }
 
   // Tombol Refresh Jaringan
@@ -104,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (icon) icon.classList.add('fa-spin');
       await checkNetworkState();
       if (icon) icon.classList.remove('fa-spin');
-      showToast('Status jaringan telah diperbarui.', 'info');
+      showToast('Status jaringan & lokasi GPS telah diperbarui.', 'info');
     });
   }
 
@@ -150,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Helper untuk mengatur state tombol Hadir berdasarkan status absen & jaringan
+  // Helper untuk mengatur state tombol Hadir berdasarkan status absen, jaringan & GPS
   async function applyButtonState(member) {
     const today = getTodayDateString();
     const existing = await isAlreadyAttendedAsync(member.id, today);
@@ -165,12 +186,17 @@ document.addEventListener('DOMContentLoaded', function () {
       hadirBtn.innerHTML = '<i class="fas fa-check-double"></i> SUDAH ABSEN';
       showAlreadyCard(member, existing);
     } else if (!isNetworkAllowed) {
-      // Belum absen tapi jaringan bukan WiFi Posko
+      // Jaringan bukan WiFi Posko
       hadirBtn.disabled = true;
       hadirBtn.classList.add('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-lock"></i> KHUSUS WIFI POSKO';
+      hadirBtn.innerHTML = '<i class="fas fa-wifi"></i> KHUSUS WIFI POSKO';
+    } else if (!isLocationAllowed) {
+      // Lokasi GPS di luar radius Posko
+      hadirBtn.disabled = true;
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-location-dot"></i> DILUAR RADIUS POSKO';
     } else {
-      // Belum absen dan jaringan WiFi Posko OK
+      // Belum absen dan jaringan & lokasi GPS Posko OK
       hadirBtn.disabled = false;
       hadirBtn.classList.remove('btn-disabled');
       hadirBtn.innerHTML = '<i class="fas fa-check"></i> HADIR';
@@ -226,7 +252,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isNetworkAllowed) {
         hadirBtn.disabled = true;
         hadirBtn.classList.add('btn-disabled');
-        hadirBtn.innerHTML = '<i class="fas fa-ban"></i> BUKAN WIFI POSKO';
+        hadirBtn.innerHTML = '<i class="fas fa-wifi"></i> KHUSUS WIFI POSKO';
+      } else if (!isLocationAllowed) {
+        hadirBtn.disabled = true;
+        hadirBtn.classList.add('btn-disabled');
+        hadirBtn.innerHTML = '<i class="fas fa-location-dot"></i> DILUAR RADIUS POSKO';
       } else {
         hadirBtn.disabled = false;
         hadirBtn.classList.remove('btn-disabled');
@@ -249,6 +279,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (hadirBtn.disabled) {
       if (!isNetworkAllowed) {
         showToast(NETWORK_CONFIG.DENIED_MESSAGE || 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.', 'error');
+      } else if (!isLocationAllowed) {
+        showToast('Absensi ditolak: Anda berada di luar radius Posko KKN.', 'error');
       }
       return;
     }
@@ -274,20 +306,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ------------------------------------------------------------
-    // PENGECEKAN ULANG JARINGAN (PRE-SUBMIT RE-CHECK)
-    // Supaya pengguna tidak bisa berpindah jaringan setelah buka page
+    // PENGECEKAN ULANG JARINGAN & LOKASI (PRE-SUBMIT RE-CHECK)
     // ------------------------------------------------------------
     hadirBtn.disabled = true;
-    hadirBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifikasi Jaringan...';
+    hadirBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifikasi Jaringan & GPS...';
 
-    const netCheckBeforeSubmit = await checkNetworkState();
+    const checkBeforeSubmit = await checkNetworkState();
 
-    if (!netCheckBeforeSubmit.isAllowed) {
-      showToast(NETWORK_CONFIG.DENIED_MESSAGE || 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.', 'error');
+    if (!checkBeforeSubmit.netResult.isAllowed) {
+      showToast(checkBeforeSubmit.netResult.message || 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.', 'error');
       hadirBtn.disabled = true;
       hadirBtn.classList.add('btn-disabled');
-      hadirBtn.innerHTML = '<i class="fas fa-ban"></i> BUKAN WIFI POSKO';
-      return; // Hentikan proses, JANGAN simpan ke Supabase!
+      hadirBtn.innerHTML = '<i class="fas fa-wifi"></i> BUKAN WIFI POSKO';
+      return;
+    }
+
+    if (!checkBeforeSubmit.locResult.isAllowed) {
+      showToast(checkBeforeSubmit.locResult.message || 'Absensi ditolak: Anda berada di luar radius Posko KKN.', 'error');
+      hadirBtn.disabled = true;
+      hadirBtn.classList.add('btn-disabled');
+      hadirBtn.innerHTML = '<i class="fas fa-location-dot"></i> DILUAR RADIUS POSKO';
+      return;
     }
 
     // Loading state simpan data

@@ -33,3 +33,27 @@ const NETWORK_CONFIG = {
   TIMEOUT_MS: 5000
 };
 
+/**
+ * Konfigurasi Validasi Geofencing (GPS Lokasi Posko KKN)
+ *
+ * ENABLE_GEOLOCATION: Set true untuk mengaktifkan validasi jarak GPS
+ * POSKO_LAT & POSKO_LNG: Koordinat Latitude & Longitude Posko KKN
+ * MAX_RADIUS_METERS: Jarak radius maksimal (meter) dari Posko KKN
+ */
+const LOCATION_CONFIG = {
+  // Set true untuk mengaktifkan Geofencing GPS
+  ENABLE_GEOLOCATION: true,
+
+  // Koordinat Posko KKN (Dapat diubah via Dashboard Admin atau di sini)
+  POSKO_LAT: null, // Contoh: -6.200000 (Jika null, sistem mengambil dari simpanan Admin atau izin lokasi)
+  POSKO_LNG: null, // Contoh: 106.816666
+
+  // Radius maksimal kehadiran (dalam meter)
+  MAX_RADIUS_METERS: 50,
+
+  // Pesan kesalahan
+  DENIED_MESSAGE: 'Anda berada di luar radius Posko KKN.',
+  PERMISSION_DENIED_MSG: 'Akses lokasi (GPS) ditolak. Harap izinkan lokasi di browser HP Anda.'
+};
+
+

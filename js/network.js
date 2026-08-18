@@ -133,3 +133,120 @@ function isIpMatching(pattern, currentIp) {
 
   return false;
 }
+
+/**
+ * ============================================================
+ * GEOFENCING GPS VALIDATION
+ * ============================================================
+ */
+
+/**
+ * Menghitung jarak antara dua titik koordinat (dalam meter) menggunakan Haversine Formula
+ */
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000; // Radius Bumi dalam meter
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
+/**
+ * Mengambil koordinat GPS perangkat browser
+ * @returns {Promise<{lat: number, lng: number, accuracy: number}|{error: string, message: string}>}
+ */
+function getDeviceLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ error: 'not_supported', message: 'Browser Anda tidak mendukung lokasi GPS.' });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: Math.round(position.coords.accuracy)
+        });
+      },
+      (error) => {
+        let msg = 'Gagal mengakses lokasi GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Akses lokasi (GPS) ditolak. Harap izinkan akses lokasi pada browser HP Anda.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = 'Informasi lokasi GPS tidak tersedia.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Waktu permintaan lokasi GPS habis (timeout). Sinyal GPS lemah.';
+        }
+        resolve({ error: 'denied', code: error.code, message: msg });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  });
+}
+
+/**
+ * Memvalidasi apakah posisi GPS berada dalam radius Posko KKN
+ * @returns {Promise<{ isAllowed: boolean, distance: number|null, status: string, message: string }>}
+ */
+async function verifyLocationConnection() {
+  const locConfig = typeof getPoskoLocationConfig === 'function' ? getPoskoLocationConfig() : {};
+
+  if (locConfig.enable === false) {
+    return { isAllowed: true, distance: 0, status: 'disabled', message: 'Validasi GPS nonaktif.' };
+  }
+
+  const poskoLat = locConfig.lat;
+  const poskoLng = locConfig.lng;
+  const maxRadius = locConfig.radius || 50;
+
+  if (poskoLat === null || poskoLng === null || typeof poskoLat === 'undefined') {
+    return {
+      isAllowed: true,
+      distance: 0,
+      status: 'unconfigured',
+      message: 'Koordinat Posko belum diset oleh Admin. Menggunakan akses biasa.'
+    };
+  }
+
+  const loc = await getDeviceLocation();
+
+  if (!loc || loc.error) {
+    return {
+      isAllowed: false,
+      distance: null,
+      status: 'error_location',
+      message: loc ? loc.message : 'Gagal mendeteksi lokasi GPS.'
+    };
+  }
+
+  const distance = calculateDistanceMeters(loc.lat, loc.lng, poskoLat, poskoLng);
+
+  if (distance <= maxRadius) {
+    return {
+      isAllowed: true,
+      distance: distance,
+      accuracy: loc.accuracy,
+      status: 'success',
+      message: `Lokasi GPS Posko Terverifikasi (Jarak: ${distance} m)`
+    };
+  } else {
+    return {
+      isAllowed: false,
+      distance: distance,
+      accuracy: loc.accuracy,
+      status: 'too_far',
+      message: `Anda berada di luar radius Posko KKN (Jarak: ${distance} meter, Maksimum: ${maxRadius} meter).`
+    };
+  }
+}
+
