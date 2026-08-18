@@ -73,29 +73,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (elHadir) elHadir.textContent = hadirHariIni;
     if (elBelum) elBelum.textContent = Math.max(0, belumHadir);
 
-    // Filter untuk tabel berdasarkan single date, rentang tanggal, atau default semua
-    let filteredAttendance = attendance;
-    if (filterSingleDate) {
-      filteredAttendance = attendance.filter(a => isDateInRange(a.tanggal, filterSingleDate, filterSingleDate));
-    } else if (filterStartDate || filterEndDate) {
-      filteredAttendance = attendance.filter(a => isDateInRange(a.tanggal, filterStartDate, filterEndDate));
-    }
-
-    currentData = filteredAttendance.filter(function (a) {
+    // Khusus Dashboard Admin: Tampilkan HANYA absensi hari ini
+    currentData = todayAttendance.filter(function (a) {
       return a.nama.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     currentData.sort((a, b) => {
-      if (b.tanggal !== a.tanggal) return b.tanggal.localeCompare(a.tanggal);
       return b.jam.localeCompare(a.jam);
     });
     renderTable(currentData);
   }
 
   let currentData = [];
-  let filterSingleDate = '';
-  let filterStartDate = '';
-  let filterEndDate = '';
   let searchQuery = '';
 
   function loadTable() {
@@ -111,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <tr>
           <td colspan="6" class="empty-state">
             <i class="fas fa-clipboard-list"></i>
-            <p>Belum ada data absensi yang sesuai filter.</p>
+            <p>Belum ada data absensi hari ini.</p>
           </td>
         </tr>
       `;
@@ -168,69 +157,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (searchInput) {
     searchInput.addEventListener('input', function () {
       searchQuery = this.value.trim();
-      loadTable();
-    });
-  }
-
-  // Filter Tanggal Spesifik (Single Date)
-  const singleDateInput = document.getElementById('filterSingleDate');
-  if (singleDateInput) {
-    const onSingleChange = function () {
-      filterSingleDate = this.value;
-      if (filterSingleDate) {
-        filterStartDate = '';
-        filterEndDate = '';
-        if (filterStartInput) filterStartInput.value = '';
-        if (filterEndInput) filterEndInput.value = '';
-      }
-      loadTable();
-    };
-    singleDateInput.addEventListener('change', onSingleChange);
-    singleDateInput.addEventListener('input', onSingleChange);
-  }
-
-  // Filter Tanggal Rentang (Start & End)
-  const filterStartInput = document.getElementById('filterStartDate');
-  const filterEndInput = document.getElementById('filterEndDate');
-
-  if (filterStartInput) {
-    const onStartChange = function () {
-      filterStartDate = this.value;
-      if (filterStartDate) {
-        filterSingleDate = '';
-        if (singleDateInput) singleDateInput.value = '';
-      }
-      loadTable();
-    };
-    filterStartInput.addEventListener('change', onStartChange);
-    filterStartInput.addEventListener('input', onStartChange);
-  }
-
-  if (filterEndInput) {
-    const onEndChange = function () {
-      filterEndDate = this.value;
-      if (filterEndDate) {
-        filterSingleDate = '';
-        if (singleDateInput) singleDateInput.value = '';
-      }
-      loadTable();
-    };
-    filterEndInput.addEventListener('change', onEndChange);
-    filterEndInput.addEventListener('input', onEndChange);
-  }
-
-  // Reset filter
-  const resetFilterBtn = document.getElementById('resetFilter');
-  if (resetFilterBtn) {
-    resetFilterBtn.addEventListener('click', function () {
-      filterSingleDate = '';
-      filterStartDate = '';
-      filterEndDate = '';
-      searchQuery = '';
-      if (singleDateInput) singleDateInput.value = '';
-      if (filterStartInput) filterStartInput.value = '';
-      if (filterEndInput) filterEndInput.value = '';
-      if (searchInput) searchInput.value = '';
       loadTable();
     });
   }
