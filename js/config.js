@@ -23,8 +23,8 @@ const SUPABASE_CONFIG = {
  * - Dev Mode: '*' (Mengizinkan semua jaringan)
  */
 const NETWORK_CONFIG = {
-  // Rentang IP Publik WiFi Posko KKN (menggunakan wildcard '156.230.*' untuk mengakomodasi IP dinamis ISP)
-  ALLOWED_IP: '156.230.*',
+  // Rentang IP Publik WiFi Posko KKN (termasuk 203.83.40.* dan wildcard untuk IP dinamis ISP)
+  ALLOWED_IP: ['203.83.40.*', '203.83.*', '156.230.*'],
 
   // Pesan peringatan jika jaringan tidak cocok
   DENIED_MESSAGE: 'Absensi hanya dapat dilakukan melalui WiFi Posko KKN.',
