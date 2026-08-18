@@ -346,29 +346,53 @@ async function clearAllAttendanceAsync() {
   }
 }
 
-async function deleteAttendanceAsync(id) {
+async function deleteAttendanceAsync(id, anggotaId, tanggal) {
   const sb = getSupabase();
-  const targetId = isNaN(parseInt(id)) ? id : parseInt(id);
+  const targetId = parseInt(id);
+  const targetAnggotaId = parseInt(anggotaId);
+
   if (sb) {
     try {
-      const { data, error } = await sb.from('kkn_attendance').delete().eq('id', targetId).select();
+      let query = sb.from('kkn_attendance').delete();
+      if (!isNaN(targetId) && targetId > 0) {
+        query = query.eq('id', targetId);
+      } else if (!isNaN(targetAnggotaId) && tanggal) {
+        query = query.eq('anggota_id', targetAnggotaId).eq('tanggal', tanggal);
+      } else if (tanggal) {
+        query = query.eq('tanggal', tanggal);
+      }
+
+      const { data, error } = await query.select();
       if (error) {
         console.error('❌ Error deleting attendance from Supabase:', error);
+        alert('⚠️ Gagal menghapus data di Supabase Cloud:\n' + error.message + '\n\nSilakan pastikan RLS di Supabase sudah dimatikan.');
+        return false;
       } else {
         console.log('✅ Attendance deleted from Supabase:', data);
       }
     } catch (e) {
       console.error('Exception deleting attendance from Supabase:', e);
+      alert('⚠️ Gagal terhubung ke Supabase: ' + e.message);
     }
   }
-  return deleteAttendance(targetId);
+  return deleteAttendance(id, anggotaId, tanggal);
 }
 
-function deleteAttendance(id) {
+function deleteAttendance(id, anggotaId, tanggal) {
   const attendance = getAttendance();
   const targetId = parseInt(id);
-  const filtered = attendance.filter(a => parseInt(a.id) !== targetId);
-  if (filtered.length === attendance.length) return false;
+  const targetAnggotaId = parseInt(anggotaId);
+
+  const filtered = attendance.filter(a => {
+    if (!isNaN(targetId) && targetId > 0 && parseInt(a.id) === targetId) {
+      return false;
+    }
+    if (!isNaN(targetAnggotaId) && tanggal && parseInt(a.anggotaId) === targetAnggotaId && a.tanggal === tanggal) {
+      return false;
+    }
+    return true;
+  });
+
   saveAttendance(filtered);
   return true;
 }

@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <td>${formatJamShort(record.jam)}</td>
           <td><span class="badge badge-hadir">Hadir</span></td>
           <td>
-            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id}" data-nama="${record.nama}" data-tanggal="${formatTanggalShort(record.tanggal)}">
+            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id || ''}" data-anggota-id="${record.anggotaId || ''}" data-nama="${record.nama}" data-tanggal="${record.tanggal}">
               <i class="fas fa-trash"></i> Hapus
             </button>
           </td>
@@ -158,13 +158,20 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!deleteBtn) return;
 
       const id = deleteBtn.dataset.id;
-      const nama = deleteBtn.dataset.nama;
+      const anggotaId = deleteBtn.dataset.anggotaId;
       const tanggal = deleteBtn.dataset.tanggal;
+      const nama = deleteBtn.dataset.nama;
+      const tglDisplay = formatTanggalShort(tanggal);
 
-      if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tanggal}?`)) {
-        await deleteAttendanceAsync(id);
-        loadTable();
-        alert(`Data absensi ${nama} telah berhasil dihapus.`);
+      if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tglDisplay}?`)) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        const res = await deleteAttendanceAsync(id, anggotaId, tanggal);
+        if (res !== false) {
+          await updateStatsAndTable();
+        } else {
+          loadTable();
+        }
       }
     });
   }
@@ -185,18 +192,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (filterStartInput) {
     filterStartInput.value = getTodayDateString();
-    filterStartInput.addEventListener('change', function () {
+    const onStartChange = function () {
       filterStartDate = this.value;
       loadTable();
-    });
+    };
+    filterStartInput.addEventListener('change', onStartChange);
+    filterStartInput.addEventListener('input', onStartChange);
   }
 
   if (filterEndInput) {
     filterEndInput.value = getTodayDateString();
-    filterEndInput.addEventListener('change', function () {
+    const onEndChange = function () {
       filterEndDate = this.value;
       loadTable();
-    });
+    };
+    filterEndInput.addEventListener('change', onEndChange);
+    filterEndInput.addEventListener('input', onEndChange);
   }
 
   // Reset filter

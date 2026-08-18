@@ -64,16 +64,29 @@ function initAbsensiPage() {
   let startDate = '';
   let endDate = '';
 
+  function cleanDateStr(d) {
+    return String(d || '').trim().substring(0, 10);
+  }
+
   async function loadHistory() {
     let data = await getAttendanceAsync();
 
     // Filter rentang tanggal
     if (startDate && endDate) {
-      data = data.filter(a => a.tanggal >= startDate && a.tanggal <= endDate);
+      data = data.filter(a => {
+        const t = cleanDateStr(a.tanggal);
+        return t >= startDate && t <= endDate;
+      });
     } else if (startDate) {
-      data = data.filter(a => a.tanggal >= startDate);
+      data = data.filter(a => {
+        const t = cleanDateStr(a.tanggal);
+        return t >= startDate;
+      });
     } else if (endDate) {
-      data = data.filter(a => a.tanggal <= endDate);
+      data = data.filter(a => {
+        const t = cleanDateStr(a.tanggal);
+        return t <= endDate;
+      });
     }
 
     // Filter nama
@@ -111,7 +124,7 @@ function initAbsensiPage() {
           <td>${formatJamShort(record.jam)}</td>
           <td><span class="badge badge-hadir">Hadir</span></td>
           <td>
-            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id}" data-nama="${record.nama}" data-tanggal="${formatTanggalShort(record.tanggal)}">
+            <button class="btn-action btn-delete btn-delete-attendance" data-id="${record.id || ''}" data-anggota-id="${record.anggotaId || ''}" data-nama="${record.nama}" data-tanggal="${record.tanggal}">
               <i class="fas fa-trash"></i> Hapus
             </button>
           </td>
@@ -126,13 +139,21 @@ function initAbsensiPage() {
     if (!deleteBtn) return;
 
     const id = deleteBtn.dataset.id;
-    const nama = deleteBtn.dataset.nama;
+    const anggotaId = deleteBtn.dataset.anggotaId;
     const tanggal = deleteBtn.dataset.tanggal;
+    const nama = deleteBtn.dataset.nama;
+    const tglDisplay = formatTanggalShort(tanggal);
 
-    if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tanggal}?`)) {
-      await deleteAttendanceAsync(id);
-      await loadHistory();
-      showToast(`Data absensi ${nama} telah berhasil dihapus.`, 'success');
+    if (confirm(`Apakah Anda yakin ingin menghapus data absensi ${nama} pada tanggal ${tglDisplay}?`)) {
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      const res = await deleteAttendanceAsync(id, anggotaId, tanggal);
+      if (res !== false) {
+        await loadHistory();
+        showToast(`Data absensi ${nama} telah berhasil dihapus.`, 'success');
+      } else {
+        await loadHistory();
+      }
     }
   });
 
@@ -147,18 +168,22 @@ function initAbsensiPage() {
 
   const startInput = document.getElementById('filterStartDateHistory');
   if (startInput) {
-    startInput.addEventListener('change', function () {
+    const onStartChange = function () {
       startDate = this.value;
       loadHistory();
-    });
+    };
+    startInput.addEventListener('change', onStartChange);
+    startInput.addEventListener('input', onStartChange);
   }
 
   const endInput = document.getElementById('filterEndDateHistory');
   if (endInput) {
-    endInput.addEventListener('change', function () {
+    const onEndChange = function () {
       endDate = this.value;
       loadHistory();
-    });
+    };
+    endInput.addEventListener('change', onEndChange);
+    endInput.addEventListener('input', onEndChange);
   }
 
   const resetBtn = document.getElementById('resetHistoryFilter');
@@ -180,11 +205,14 @@ function initAbsensiPage() {
     exportBtn.addEventListener('click', async function () {
       let data = await getAttendanceAsync();
       if (startDate && endDate) {
-        data = data.filter(a => a.tanggal >= startDate && a.tanggal <= endDate);
+        data = data.filter(a => {
+          const t = cleanDateStr(a.tanggal);
+          return t >= startDate && t <= endDate;
+        });
       } else if (startDate) {
-        data = data.filter(a => a.tanggal >= startDate);
+        data = data.filter(a => cleanDateStr(a.tanggal) >= startDate);
       } else if (endDate) {
-        data = data.filter(a => a.tanggal <= endDate);
+        data = data.filter(a => cleanDateStr(a.tanggal) <= endDate);
       }
       if (searchQuery) data = data.filter(a => a.nama.toLowerCase().includes(searchQuery.toLowerCase()));
       data.sort((a, b) => {
